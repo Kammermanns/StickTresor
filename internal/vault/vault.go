@@ -119,12 +119,16 @@ func Open(dir, password string) (*Vault, error) {
 // OpenRecovery öffnet wiederherstellung.kdbx mit dem Wiederherstellungsschlüssel.
 // Danach muss mit SetPassword ein neues Master-Passwort gesetzt und gespeichert werden.
 func OpenRecovery(dir, key string) (*Vault, error) {
-	creds := kp.NewPasswordCredentials(NormalizeRecoveryKey(key))
+	creds := kp.NewPasswordCredentials(CanonicalRecoveryKey(key))
 	v, err := openFile(dir, filepath.Join(dir, RecoveryFileName), creds)
+	if errors.Is(err, ErrWrongPassword) {
+		// Dateien bis Version 4.1: Schlüssel ohne Bindestriche als Passwort
+		v, err = openFile(dir, filepath.Join(dir, RecoveryFileName), kp.NewPasswordCredentials(NormalizeRecoveryKey(key)))
+	}
 	if err != nil {
 		return nil, err
 	}
-	v.recovery = creds
+	v.recovery = creds // beim nächsten Speichern mit dem Schlüssel wie auf dem Ausdruck
 	return v, nil
 }
 
@@ -156,7 +160,7 @@ func openFile(dir, path string, creds *kp.DBCredentials) (*Vault, error) {
 	v.ensurePCGroup()
 	v.migrateDevices()
 	if k := v.getMeta(metaRecKey); k != "" {
-		v.recovery = kp.NewPasswordCredentials(NormalizeRecoveryKey(k))
+		v.recovery = kp.NewPasswordCredentials(CanonicalRecoveryKey(k))
 	}
 	return v, nil
 }
@@ -282,7 +286,7 @@ func (v *Vault) CheckPassword(pw string) bool {
 
 // SetRecoveryKey richtet die Wiederherstellungsdatei mit diesem Schlüssel ein.
 func (v *Vault) SetRecoveryKey(key string) {
-	v.recovery = kp.NewPasswordCredentials(NormalizeRecoveryKey(key))
+	v.recovery = kp.NewPasswordCredentials(CanonicalRecoveryKey(key))
 	v.setMeta(metaRecKey, key)
 }
 
@@ -311,6 +315,23 @@ func NewRecoveryKey() string {
 			sb.WriteByte('-')
 		}
 		sb.WriteByte(alphabet[int(b[i])%len(alphabet)])
+	}
+	return sb.String()
+}
+
+// CanonicalRecoveryKey bringt eine Eingabe in die Form des Ausdrucks (RK-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX).
+// Diese Form ist auch das Passwort von wiederherstellung.kdbx, damit sich die Datei in KeePass
+// mit dem Schlüssel genau so öffnen lässt, wie er auf dem Papier steht.
+func CanonicalRecoveryKey(k string) string {
+	n := NormalizeRecoveryKey(k)
+	if len(n) != 26 {
+		return n
+	}
+	var sb strings.Builder
+	sb.WriteString(n[:2])
+	for i := 2; i < len(n); i += 4 {
+		sb.WriteByte('-')
+		sb.WriteString(n[i : i+4])
 	}
 	return sb.String()
 }

@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -78,5 +79,32 @@ func TestLegacyMetaKeys(t *testing.T) {
 	}
 	if n != 1 || v.Mode() != ModeCustomer {
 		t.Fatal("Modus doppelt oder falsch")
+	}
+}
+
+// Wiederherstellungsdateien bis Version 4.1 hatten den Schlüssel ohne Bindestriche als Passwort.
+func TestLegacyRecoveryPassword(t *testing.T) {
+	dir := t.TempDir()
+	v, err := Create(dir, testPW)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := NewRecoveryKey()
+	v.SetRecoveryKey(key)
+	v.recovery = kp.NewPasswordCredentials(NormalizeRecoveryKey(key)) // altes Verfahren
+	if err := v.Save(); err != nil {
+		t.Fatal(err)
+	}
+	r, err := OpenRecovery(dir, key)
+	if err != nil {
+		t.Fatal("alte Wiederherstellungsdatei:", err)
+	}
+	r.SetPassword("neu-123456")
+	if err := r.Save(); err != nil {
+		t.Fatal(err)
+	}
+	// jetzt mit dem Schlüssel wie auf dem Ausdruck (für KeePass)
+	if _, err := openFile(dir, filepath.Join(dir, RecoveryFileName), kp.NewPasswordCredentials(key)); err != nil {
+		t.Fatal("nach dem Speichern nicht umgestellt:", err)
 	}
 }

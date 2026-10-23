@@ -1884,6 +1884,7 @@ function viewHelp() {
     </ul>`)}
   ${sec("keepass", "Offenes KeePass-Format", `
     <p>Ihre Daten liegen im Standardformat von KeePass. Sie können <b>daten.kdbx</b> jederzeit mit demselben Master-Passwort öffnen: mit <b>KeePass</b> oder <b>KeePassXC</b> am PC, <b>KeePassDX</b> (Android) oder <b>Strongbox</b> (iPhone). Kategorien sind dort Ordner, Geräte stehen als Tags und im Feld «Geräte».</p>
+    <p>Die Kopie <b>Daten\\wiederherstellung.kdbx</b> öffnen Sie in KeePass mit dem <b>Wiederherstellungsschlüssel</b> als Passwort, genau so wie er ausgedruckt ist (mit Bindestrichen, z.B. <span class="mono">RK-XXXX-XXXX-…</span>).</p>
     <p class="note">Bitte die Datei nicht gleichzeitig in zwei Programmen oder auf zwei PCs offen haben.</p>`)}
   ${hasSupport(P) ? sec("support", "Hilfe von " + esc(P.firma), `
     <p><b>${esc(P.firma)}</b>${[P.strasse, P.ort].filter(Boolean).map(x => " · " + esc(x)).join("")}<br>

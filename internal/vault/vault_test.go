@@ -1,6 +1,7 @@
 package vault
 
 import (
+	kp "github.com/tobischo/gokeepasslib/v3"
 	"os"
 	"path/filepath"
 	"testing"
@@ -114,6 +115,13 @@ func TestFullFlow(t *testing.T) {
 		t.Fatal("Schlüssel muss weiter gelten:", err)
 	}
 
+	// KeePass: Passwort der Wiederherstellungsdatei ist der Schlüssel wie auf dem Ausdruck
+	if CanonicalRecoveryKey("rk"+NormalizeRecoveryKey(key)[2:]) != key {
+		t.Fatalf("Schreibweise: %s / %s", CanonicalRecoveryKey(key), key)
+	}
+	if _, err := openFile(dir, filepath.Join(dir, RecoveryFileName), kp.NewPasswordCredentials(key)); err != nil {
+		t.Fatal("wiederherstellung.kdbx lässt sich nicht mit dem gedruckten Schlüssel öffnen:", err)
+	}
 	// Eintrag verschieben und löschen
 	v4, _ := Open(dir, "Neu-Passwort-2027")
 	es = v4.Entries()
