@@ -16,6 +16,7 @@ const partnerPW = "Partner-Test-1"
 // Danach darf weder das Übergabe-Passwort noch eine Sicherung damit übrig bleiben.
 func TestHandoverFlow(t *testing.T) {
 	dir := t.TempDir()
+	data := filepath.Join(dir, DataFolder)
 	a := New(dir, nil)
 	st, _ := a.Status()
 	if st.State != "new" || st.Partner != nil || st.AppTitle != partner.DefaultAppName || !st.CanPartner {
@@ -52,12 +53,12 @@ func TestHandoverFlow(t *testing.T) {
 	if err := a.Handover(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := vault.Open(dir, partnerPW); err == nil {
+	if _, err := vault.Open(data, partnerPW); err == nil {
 		t.Fatal("Übergabe-Passwort gilt nach der Übergabe noch")
 	}
 
 	// Jemand ändert partner.json auf dem Stick
-	os.WriteFile(filepath.Join(dir, partner.FileName), []byte(`{"firma":"Fremd AG"}`), 0o644)
+	os.WriteFile(filepath.Join(data, partner.FileName), []byte(`{"firma":"Fremd AG"}`), 0o644)
 
 	b := New(dir, nil) // nächster Start beim Kunden
 	st, _ = b.Status()
@@ -70,14 +71,14 @@ func TestHandoverFlow(t *testing.T) {
 	if err := b.SetMaster("kunde1"); err != nil {
 		t.Fatal(err)
 	}
-	files, _ := filepath.Glob(filepath.Join(dir, "Backup", "*.kdbx"))
+	files, _ := filepath.Glob(filepath.Join(data, "Backup", "*.kdbx"))
 	for _, f := range files {
 		t.Errorf("Sicherung übrig: %s", filepath.Base(f))
 	}
-	if _, err := os.Stat(filepath.Join(dir, handoverFile)); err == nil {
+	if _, err := os.Stat(filepath.Join(data, handoverFile)); err == nil {
 		t.Fatal("uebergabe.status sollte gelöscht sein")
 	}
-	if _, err := os.Stat(filepath.Join(dir, vault.RecoveryFileName)); err != nil {
+	if _, err := os.Stat(filepath.Join(data, vault.RecoveryFileName)); err != nil {
 		t.Fatal("Wiederherstellungsdatei fehlt")
 	}
 	if _, err := b.SavePartner(partner.Partner{Firma: "X"}); err == nil {
@@ -96,7 +97,7 @@ func TestHandoverFlow(t *testing.T) {
 	if st.Partner == nil || st.Partner.Firma != "Muster IT GmbH" {
 		t.Fatalf("geschützte Kopie nicht verwendet: %+v", st.Partner)
 	}
-	if p, _ := partner.Load(dir); p == nil || p.Firma != "Muster IT GmbH" {
+	if p, _ := partner.Load(data); p == nil || p.Firma != "Muster IT GmbH" {
 		t.Fatal("partner.json nicht wiederhergestellt")
 	}
 }
@@ -104,6 +105,7 @@ func TestHandoverFlow(t *testing.T) {
 // Eigene Nutzung ohne Partner, auch wenn die App vor dem Passwort geschlossen wird.
 func TestSelfUse(t *testing.T) {
 	dir := t.TempDir()
+	data := filepath.Join(dir, DataFolder)
 	a := New(dir, nil)
 	if err := a.Create("", true); err != nil {
 		t.Fatal(err)
@@ -117,7 +119,7 @@ func TestSelfUse(t *testing.T) {
 	if err := b.SetMaster("meinpasswort"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := vault.Open(dir, "meinpasswort"); err != nil {
+	if _, err := vault.Open(data, "meinpasswort"); err != nil {
 		t.Fatal(err)
 	}
 	if st, _ := New(dir, nil).Status(); st.State != "locked" || st.Partner != nil {
@@ -141,8 +143,43 @@ func TestPrepareStick(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(stick, r.Exe)); err != nil {
 		t.Fatal("Programm fehlt")
 	}
-	b, _ := os.ReadFile(filepath.Join(stick, partner.FileName))
+	b, _ := os.ReadFile(filepath.Join(stick, DataFolder, partner.FileName))
 	if !strings.Contains(string(b), "Muster IT GmbH") || r.HasVault {
 		t.Fatalf("partner.json: %s %+v", b, r)
+	}
+}
+
+// Sticks der Version 4.0: Daten liegen neben der Exe und werden beim Start nach «Daten» verschoben.
+func TestMoveToDataFolder(t *testing.T) {
+	dir := t.TempDir()
+	v, err := vault.Create(dir, partnerPW)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = v
+	os.WriteFile(filepath.Join(dir, partner.FileName), []byte(`{"firma":"Muster IT GmbH"}`), 0o644)
+	os.WriteFile(filepath.Join(dir, handoverFile), []byte("uebergabe\n"), 0o600)
+	os.MkdirAll(filepath.Join(dir, "Backup"), 0o700)
+	os.WriteFile(filepath.Join(dir, "Backup", "daten_x.kdbx"), []byte("x"), 0o600)
+	os.WriteFile(filepath.Join(dir, "StickTresor.exe"), []byte("exe"), 0o755)
+
+	a := New(dir, nil)
+	st, _ := a.Status()
+	if st.State != "handover-locked" || st.Partner == nil {
+		t.Fatalf("Status nach Umzug: %+v", st)
+	}
+	left, _ := os.ReadDir(dir)
+	names := []string{}
+	for _, e := range left {
+		names = append(names, e.Name())
+	}
+	if len(names) != 2 { // nur noch Exe und «Daten»
+		t.Fatalf("oberste Ebene: %v", names)
+	}
+	if _, err := vault.Open(filepath.Join(dir, DataFolder), partnerPW); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, DataFolder, "Backup", "daten_x.kdbx")); err != nil {
+		t.Fatal("Backup nicht verschoben")
 	}
 }

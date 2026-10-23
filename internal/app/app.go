@@ -46,10 +46,11 @@ type Platform interface {
 }
 
 type App struct {
-	mu   sync.Mutex
-	dir  string
-	v    *vault.Vault
-	plat Platform
+	mu     sync.Mutex
+	exeDir string // Ordner des Programms
+	dir    string // Datenordner (exeDir\Daten)
+	v      *vault.Vault
+	plat   Platform
 
 	// Zustand nach dem Öffnen:
 	// "" = gesperrt, "open" = geöffnet,
@@ -62,7 +63,10 @@ type App struct {
 	upd         *update.Info
 }
 
-func New(dir string, p Platform) *App { return &App{dir: dir, plat: p} }
+// New erzeugt die App für den Programmordner exeDir; die Daten liegen in exeDir\Daten.
+func New(exeDir string, p Platform) *App {
+	return &App{exeDir: exeDir, dir: DataDir(exeDir), plat: p}
+}
 
 // ---------- Status ----------
 

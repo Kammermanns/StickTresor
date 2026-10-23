@@ -8,7 +8,7 @@ Alle Daten liegen verschlüsselt in `daten.kdbx` im offenen **KeePass-Format (KD
 - **Privat / selbst:** Programm starten, «Selbst verwenden», eigenes Master-Passwort festlegen.
 - **IT-Firmen für ihre Kunden:** Firmenangaben (Logo, Adresse, Support, Helpdesk, Farbe) einmal erfassen, mit «Auf USB-Stick kopieren» Programm und Angaben auf den Stick bringen, beim Kunden die PCs erfassen und mit «Passwort setzen» übergeben. Beim nächsten Start legt der Kunde sein eigenes Master-Passwort fest; ab dann hat nur noch er Zugriff.
 
-Im Programm stehen **keine Firmendaten und keine Passwörter**. Die Angaben der IT-Firma liegen in `partner.json` neben der Exe
+Im Programm stehen **keine Firmendaten und keine Passwörter**. Die Angaben der IT-Firma liegen in `Daten\partner.json`
 (und geschützt im Tresor). Das Übergabe-Passwort wählt die IT-Firma selbst; es wird nirgends gespeichert.
 
 ## Updates
@@ -21,14 +21,17 @@ Neue Version veröffentlichen: auf GitHub unter **Releases → Draft a new relea
 
 ## Dateien auf dem Stick
 
+Auf der obersten Ebene liegt nur das Programm, alle Daten liegen im Ordner `Daten`
+(Sticks der Version 4.0 werden beim ersten Start automatisch umgestellt).
+
 | Datei | Inhalt |
 |---|---|
 | `StickTresor.exe` | das Programm |
-| `partner.json` | Firmenangaben der IT-Firma (optional) |
-| `daten.kdbx` | der verschlüsselte Tresor |
-| `wiederherstellung.kdbx` | Kopie, mit dem Wiederherstellungsschlüssel verschlüsselt |
-| `uebergabe.status` | nur bis der Kunde sein Passwort festgelegt hat |
-| `Backup\` | automatische Sicherungen (die letzten 20) |
+| `Daten\daten.kdbx` | der verschlüsselte Tresor (KeePass-Format) |
+| `Daten\wiederherstellung.kdbx` | Kopie, mit dem Wiederherstellungsschlüssel verschlüsselt |
+| `Daten\partner.json` | Firmenangaben der IT-Firma (optional) |
+| `Daten\uebergabe.status` | nur bis der Kunde sein Passwort festgelegt hat |
+| `Daten\Backup\` | automatische Sicherungen (die letzten 20) |
 
 ## Aufbau
 

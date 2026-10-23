@@ -557,7 +557,7 @@ function partnerDialog() {
   const cur = P ? { ...P } : { appName: "", color: DEFAULT_COLOR, supportTitel: "Ihr IT-Partner" };
   const fld = ([k, l, ph]) => `<div><label class="lbl" for="pf-${k}">${l}</label><input id="pf-${k}" data-k="${k}" class="field" value="${esc(cur[k] || "")}" placeholder="${esc(ph)}" autocomplete="off"></div>`;
   dialog(`<h2>Firmenangaben</h2>
-    <div class="small muted" style="margin-top:-6px">Diese Angaben sieht Ihr Kunde in der App und auf jedem Ausdruck. Sie werden in <b>partner.json</b> neben dem Programm und geschützt im Tresor gespeichert.</div>
+    <div class="small muted" style="margin-top:-6px">Diese Angaben sieht Ihr Kunde in der App und auf jedem Ausdruck. Sie werden in <b>Daten\\partner.json</b> und geschützt im Tresor gespeichert.</div>
     <div class="pfgrid">
       <form id="pf" class="stack" style="gap:10px">
         <div class="fgrid">${PF.slice(0, 6).map(fld).join("")}</div>
@@ -1682,7 +1682,7 @@ function viewNachlass() {
     <section class="box"><h2 style="font-size:16px">Passwörter</h2>
       ${hint(["Beschreiben Sie den Weg zu Ihren Zugangsdaten, nicht die Passwörter selbst.", "Notieren Sie, wo das Master-Passwort und der Wiederherstellungsschlüssel dieses Tresors liegen (z. B. Notfallumschlag im Safe).", "Vermerken Sie, wo das Gerät für die Zwei-Faktor-Anmeldung (Smartphone, Authenticator) zu finden ist und wie die Vertrauensperson an den PIN gelangt."])}
       <div class="fgrid">
-        ${inp("pw.manager", "Passwort-Manager", "StickTresor (KeePass-Datei daten.kdbx auf dem USB-Stick)")}
+        ${inp("pw.manager", "Passwort-Manager", "StickTresor (KeePass-Datei Daten\\daten.kdbx auf dem USB-Stick)")}
         ${inp("pw.stick", "Aufbewahrungsort USB-Stick", "z. B. Schreibtisch, Schublade oben links")}
         ${inp("pw.master", "Aufbewahrungsort Master-Passwort", "z. B. Notfallumschlag im Safe")}
         ${inp("pw.rec", "Aufbewahrungsort Wiederherstellungsschlüssel", "z. B. Bankschliessfach")}
@@ -1763,7 +1763,7 @@ function printNachlass() {
     <div class="pr-sec"><h2>Rechtliche Ermächtigung</h2><p>${esc(NL_AUTH)}</p></div>
     <div class="pr-sec"><h2>Persönliche Angaben</h2><table class="nl-info">${line("Vorname", p.vorname)}${line("Nachname", p.nachname)}${line("Geburtsdatum", p.geburt)}${line("Adresse", p.adresse)}</table></div>
     <div class="pr-sec"><h2>Vertrauensperson und Bevollmächtigung</h2><table class="nl-info">${line("Vorname", v.vorname)}${line("Nachname", v.nachname)}${line("Telefon / E-Mail", v.kontakt)}${line("Beziehung / Rolle", v.rolle)}</table></div>
-    <div class="pr-sec"><h2>Passwörter</h2><table class="nl-info">${line("Passwort-Manager", w.manager || "StickTresor (KeePass-Datei daten.kdbx auf dem USB-Stick)")}${w.stick ? line("Aufbewahrungsort USB-Stick", w.stick) : ""}${line("Aufbewahrungsort Master-Passwort", w.master)}${line("Aufbewahrungsort Wiederherstellungsschlüssel", w.rec)}${line("Aufbewahrungsort physische Zugangsdaten", w.physisch)}${line("Zugang 2FA-Gerät / Smartphone-PIN", w.zweiFA)}${w.notizen ? line("Weitere Notizen", w.notizen) : ""}</table>
+    <div class="pr-sec"><h2>Passwörter</h2><table class="nl-info">${line("Passwort-Manager", w.manager || "StickTresor (KeePass-Datei Daten\\daten.kdbx auf dem USB-Stick)")}${w.stick ? line("Aufbewahrungsort USB-Stick", w.stick) : ""}${line("Aufbewahrungsort Master-Passwort", w.master)}${line("Aufbewahrungsort Wiederherstellungsschlüssel", w.rec)}${line("Aufbewahrungsort physische Zugangsdaten", w.physisch)}${line("Zugang 2FA-Gerät / Smartphone-PIN", w.zweiFA)}${w.notizen ? line("Weitere Notizen", w.notizen) : ""}</table>
       <p class="small">Die Datei daten.kdbx kann auch mit KeePass, KeePassXC (PC), KeePassDX (Android) oder Strongbox (iPhone) und dem Master-Passwort geöffnet werden.</p></div>
     ${tables}
     <div class="pr-sec nl-sign"><h2>Bestätigung und Gültigkeit</h2><p>Dieses Dokument entspricht meinem ausdrücklichen Willen bezüglich meines digitalen Nachlasses.</p>
@@ -1793,7 +1793,7 @@ function viewHelp() {
     </ol>
     <p class="note">Nach der Übergabe funktioniert Ihr Übergabe-Passwort nicht mehr. Sie haben dann keinen Zugriff mehr, nur noch der Kunde.</p>`, true) : ""}
   ${sec("start", "Erste Schritte", `
-    <p>${esc(appTitle())} läuft direkt vom USB-Stick, ohne Installation. Alle Daten liegen verschlüsselt in der Datei <b>daten.kdbx</b> neben dem Programm.</p>
+    <p>${esc(appTitle())} läuft direkt vom USB-Stick, ohne Installation. Neben dem Programm liegt nur der Ordner <b>Daten</b>. Darin sind alle Angaben verschlüsselt in der Datei <b>daten.kdbx</b> gespeichert, dazu die Sicherungen im Ordner <b>Backup</b>.</p>
     <ul>
       <li><b>Start:</b> ${P ? "Kontaktdaten Ihres IT-Partners und der" : "Der"} Weg zu Geräten, Passwörtern und Abos.</li>
       <li><b>Geräte:</b> die Datenblätter Ihrer PCs.</li>
@@ -1864,7 +1864,7 @@ function viewHelp() {
     <p class="note">Ohne Master-Passwort <b>und</b> ohne Wiederherstellungsschlüssel lassen sich die Daten nicht mehr öffnen${P ? ", auch nicht durch " + who : ""}.</p>`)}
   ${sec("backup", "Sicherung", `
     <ul>
-      <li>Bei jedem Start wird vor der ersten Änderung automatisch eine verschlüsselte Kopie im Ordner <b>Backup</b> auf dem Stick angelegt. Die letzten 20 bleiben erhalten.</li>
+      <li>Bei jedem Start wird vor der ersten Änderung automatisch eine verschlüsselte Kopie im Ordner <b>Daten\\Backup</b> auf dem Stick angelegt. Die letzten 20 bleiben erhalten.</li>
       <li>Da ein USB-Stick verloren gehen oder kaputtgehen kann: Zahnrad → <b>«Sicherung an anderen Ort»</b>, z.B. auf den PC oder eine externe Festplatte.</li>
       <li>Eine Sicherung zurückholen: Programm schliessen, die gewünschte Datei aus <b>Backup</b> nach <b>daten.kdbx</b> kopieren (die alte vorher umbenennen).${P ? " Bei Fragen hilft " + who + "." : ""}</li>
     </ul>`)}
@@ -1919,7 +1919,7 @@ function viewSettings() {
       <div><button class="btn" data-act="open-folder">${I.folder} Speicherort öffnen</button></div>
     </section>
     <section class="box"><h2 style="font-size:15px">Sicherung</h2>
-      <div style="color:#4A4450">Bei jedem Start wird vor der ersten Änderung automatisch eine verschlüsselte Kopie im Ordner <b>Backup</b> auf dem Stick abgelegt (die letzten 20 bleiben erhalten). Zusätzlich empfehlen wir eine Kopie auf einem anderen Laufwerk.</div>
+      <div style="color:#4A4450">Bei jedem Start wird vor der ersten Änderung automatisch eine verschlüsselte Kopie im Ordner <b>Daten\\Backup</b> auf dem Stick abgelegt (die letzten 20 bleiben erhalten). Zusätzlich empfehlen wir eine Kopie auf einem anderen Laufwerk.</div>
       <div class="row"><button class="btn" data-act="backup">Sicherung auf dem Stick</button><button class="btn" data-act="backup-to">Sicherung an anderen Ort …</button></div>
     </section>
     <section class="box"><h2 style="font-size:15px">Datenblätter</h2>

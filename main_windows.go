@@ -58,7 +58,7 @@ func dataDir() string {
 
 func main() {
 	dir := dataDir()
-	p, _ := partner.Load(dir)
+	p, _ := partner.Load(app.DataDir(dir))
 	title := partner.Title(p)
 
 	// Nur eine Instanz pro Ordner, damit nicht zwei Fenster dieselbe Datei schreiben.

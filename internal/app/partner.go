@@ -133,8 +133,8 @@ func (a *App) prepareTo(dir string) (PrepareResult, error) {
 		y, _ = filepath.Abs(y)
 		return strings.EqualFold(filepath.Clean(x), filepath.Clean(y))
 	}
-	if same(dir, a.dir) {
-		return PrepareResult{}, errors.New("Bitte einen anderen Ordner wählen als den, in dem die App gerade läuft.")
+	if same(dir, a.exeDir) {
+		return PrepareResult{}, errSameDir
 	}
 	exe, err := os.Executable()
 	if err != nil {
@@ -148,9 +148,16 @@ func (a *App) prepareTo(dir string) (PrepareResult, error) {
 		return PrepareResult{}, errors.New("Das Programm konnte nicht kopiert werden (läuft es dort gerade?): " + err.Error())
 	}
 	if p := a.partnerLocked(); p != nil {
-		if err := partner.Save(dir, p); err != nil {
+		target := filepath.Join(dir, DataFolder)
+		if vault.Exists(dir) && !vault.Exists(target) {
+			target = dir // älterer Stick: die neue Version verschiebt beim Start alles in «Daten»
+		}
+		if err := os.MkdirAll(target, 0o700); err != nil {
+			return PrepareResult{}, err
+		}
+		if err := partner.Save(target, p); err != nil {
 			return PrepareResult{}, err
 		}
 	}
-	return PrepareResult{Dir: dir, Exe: filepath.Base(dst), HasVault: vault.Exists(dir)}, nil
+	return PrepareResult{Dir: dir, Exe: filepath.Base(dst), HasVault: vaultIn(dir)}, nil
 }
