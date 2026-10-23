@@ -60,11 +60,25 @@ go build -mod=vendor -trimpath -ldflags "-s -w -H windowsgui" -o StickTresor.exe
 Version setzen: zusätzlich `-X github.com/Kammermanns/StickTresor/internal/app.Version=4.1.0` in `-ldflags`.
 
 Unter Linux/macOS vorher `GOOS=windows GOARCH=amd64 CGO_ENABLED=0` setzen.
-Icon und Manifest stecken in `rsrc_windows_amd64.syso` (erzeugt mit `rsrc -manifest build/app.manifest -ico build/icon.ico`).
+Icon, Manifest und Versionsangaben stecken in `rsrc_windows_amd64.syso`, erzeugt mit
+[goversioninfo](https://github.com/josephspurrier/goversioninfo) aus `build/versioninfo.json`
+(`goversioninfo -64 -o rsrc_windows_amd64.syso build/versioninfo.json`; der GitHub-Build setzt dabei die Version aus dem Release-Tag).
 
 Tests: `go test -mod=vendor ./internal/...`
 
 Oberfläche im Browser testen: `go run -mod=vendor ./cmd/devserver -dir /tmp/stick` und http://127.0.0.1:8099 öffnen.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+Kostenlose Code-Signatur durch SignPath.io, Zertifikat der SignPath Foundation (sobald das Projekt aufgenommen ist).
+
+- Signiert werden nur Dateien, die GitHub Actions aus diesem Repository baut (`StickTresor.exe` in den Releases).
+- Jede Signatur muss von Hand freigegeben werden.
+- Rollen: siehe [CODE_SIGNING.md](CODE_SIGNING.md).
+
+**Privacy / Datenschutz:** This program will not transfer any information to other networked systems unless specifically
+requested by the user or the person installing or operating it. Details: [DATENSCHUTZ.md](DATENSCHUTZ.md).
 
 ## Lizenz
 

@@ -25,6 +25,15 @@ jobs:
         id: ver
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then echo "v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"; else echo "v=0.0.0-dev" >> "$GITHUB_OUTPUT"; fi
+      - name: Versionsangaben in die Exe (Produktname, Version, Icon, Manifest)
+        run: |
+          go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.7.0
+          V="${{ steps.ver.outputs.v }}"; N="${V%%-*}"; IFS=. read -r MA MI PA <<< "$N"
+          "$(go env GOPATH)/bin/goversioninfo" -64 -o rsrc_windows_amd64.syso \
+            -file-version "$V" -product-version "$V" \
+            -ver-major "${MA:-0}" -ver-minor "${MI:-0}" -ver-patch "${PA:-0}" -ver-build 0 \
+            -product-ver-major "${MA:-0}" -product-ver-minor "${MI:-0}" -product-ver-patch "${PA:-0}" -product-ver-build 0 \
+            build/versioninfo.json
       - name: Windows-Exe bauen
         env:
           GOOS: windows
