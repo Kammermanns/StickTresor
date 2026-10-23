@@ -202,6 +202,24 @@ func TestFullFlow(t *testing.T) {
 	if getE(aid).Abo != nil {
 		t.Fatal("Abo sollte entfernt sein")
 	}
+	// Nachlass-Angaben pro Eintrag, normales Speichern ohne Angaben lässt sie stehen
+	nid, _ := v4.SaveEntry(Entry{CategoryID: v4.Categories()[0].ID, Title: "Facebook", UserName: "max", Nachlass: &Nachlass{Include: "ja", Section: "social", Action: "In Gedenkzustand versetzen", TwoFA: "ja"}})
+	ne := getE(nid)
+	if ne.Nachlass == nil || ne.Nachlass.Action != "In Gedenkzustand versetzen" || ne.Nachlass.TwoFA != "ja" {
+		t.Fatalf("Nachlass: %+v", ne.Nachlass)
+	}
+	ne.Nachlass = nil
+	ne.UserName = "max2"
+	v4.SaveEntry(ne)
+	if getE(nid).Nachlass == nil {
+		t.Fatal("Nachlass darf beim normalen Speichern nicht verschwinden")
+	}
+	ne.Nachlass = &Nachlass{}
+	v4.SaveEntry(ne)
+	if getE(nid).Nachlass != nil {
+		t.Fatal("leere Nachlass-Angaben sollten entfernt sein")
+	}
+	v4.SetNachlass(`{"person":{"vorname":"Max"}}`)
 	// Zum Schluss den Stand für die Gegenprobe mit pykeepass speichern
 	v4.Save()
 	t.Logf("Schlüssel: %s", key)

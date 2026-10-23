@@ -42,6 +42,7 @@ const (
 	metaDevGrp  = "ST.GeraetePasswoerter" // Gruppe mit einer Untergruppe pro Gerät (nur Migration)
 	metaRecKey  = "ST.Wiederherstellung"  // Schlüssel liegt verschlüsselt in der Datei, damit die Kopie aktuell bleibt
 	metaPartner = "ST.Partner"            // geschützte Kopie von partner.json
+	metaLegacy  = "ST.Nachlass"           // Angaben für den digitalen Nachlass (JSON)
 
 	rootName     = "StickTresor"
 	pcGroupName  = "PC-Datenblätter"
@@ -286,6 +287,12 @@ func (v *Vault) SetRecoveryKey(key string) {
 }
 
 func (v *Vault) HasRecovery() bool { return v.recovery != nil }
+
+// Nachlass liefert die allgemeinen Nachlass-Angaben (JSON) oder "".
+func (v *Vault) Nachlass() string { return v.getMeta(metaLegacy) }
+
+// SetNachlass speichert die allgemeinen Nachlass-Angaben (JSON).
+func (v *Vault) SetNachlass(js string) { v.setMeta(metaLegacy, js) }
 
 // Partner liefert die in der Datei gespeicherte Kopie der Partner-Angaben (JSON) oder "".
 func (v *Vault) Partner() string { return v.getMeta(metaPartner) }

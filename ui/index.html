@@ -133,7 +133,7 @@ main.content{flex:1;width:100%;max-width:1400px;margin:0 auto}
 .infogrid{display:flex;gap:48px;justify-content:center;flex-wrap:wrap;font-size:15px;line-height:1.6}
 .helpdesk{width:100%;background:var(--mag-softer);border:1px solid var(--mag);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;align-items:center}
 .hdnum{font-size:26px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
-.tiles{width:100%;max-width:820px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.tiles{width:100%;max-width:1100px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
 .tile{display:flex;gap:16px;align-items:center;text-align:left;padding:22px 24px;background:#fff;border:1px solid var(--line);border-radius:14px;cursor:pointer;min-height:96px}
 .tile:hover{border-color:var(--mag);background:var(--mag-softer)}
 .tile b{display:block;font-size:18px}
@@ -180,6 +180,28 @@ table.grid.prev{table-layout:auto;min-width:0}
 .grid tr.rowerr td{background:var(--err-bg)!important}
 .dialog.wide{max-width:900px}
 .dialog.xwide{max-width:1180px}
+.nlgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px}
+.nlintro{margin:0;padding-left:18px;color:#4A4450;font-size:13px;display:flex;flex-direction:column;gap:4px}
+details.nlbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+details.nlbox summary{cursor:pointer;font-weight:600;display:flex;gap:8px;align-items:center}
+details.nlhint{font-size:13px;color:#4A4450;background:var(--mag-softer);border-left:3px solid var(--mag);border-radius:0 8px 8px 0;padding:6px 12px}
+details.nlhint summary{cursor:pointer;font-weight:600;color:var(--mag-text)}
+details.nlhint ul{margin:6px 0 2px;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.nltable{overflow-x:auto}
+table.nl{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;min-width:860px}
+table.nl th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:4px 6px;border-bottom:1px solid var(--line)}
+table.nl td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.nl tr.off td{opacity:.5}
+table.nl tr.off td.nlck{opacity:1}
+table.nl .field{height:34px;font-size:13px;padding:0 8px}
+table.nl .nlck{width:28px}
+table.nl .nlck input{width:17px;height:17px;accent-color:var(--mag-btn)}
+table.nl .nlx{width:44px;text-align:right}
+table.nl .nlmove{width:34px;padding:0 4px;color:transparent;background:transparent;border-color:transparent;cursor:pointer;background-image:none}
+table.nl .nlmove:hover,table.nl .nlmove:focus{border-color:var(--line2)}
+table.nl td.nlx{position:relative}
+table.nl td.nlx:has(.nlmove)::after{content:"⇄";position:absolute;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted)}
+table.nl .nlmove option{color:var(--ink)}
 .updnotes{white-space:pre-wrap;margin-top:6px;max-height:160px;overflow:auto;font-size:13px}
 .ok{color:var(--ok-ink);font-weight:600}
 .pfgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);gap:22px;align-items:start}
@@ -315,6 +337,16 @@ table.keys td{padding:3px 14px 3px 0}
   .pr-sec table{width:100%;border-collapse:collapse}
   .pr-sec td{padding:1pt 4pt 1pt 0;vertical-align:top;white-space:pre-line}
   .pr-sec td:first-child{width:30%;color:#444}
+  .nl-doc .pr-sec p{margin:0 0 4pt}
+  .nl-pr td{font-size:9pt}
+  .nl-pr td:first-child{font-weight:600}
+  .nl-pr td{overflow-wrap:anywhere}
+  .nl-doc .nl-pr{border-top:0!important;padding-top:10pt}
+  .nl-pr tr.blank td{height:14pt;border-bottom:0.5pt solid #ccc}
+  .nl-sign{break-inside:avoid}
+  .nl-sigrow{display:flex;gap:30pt;margin-top:28pt}
+  .nl-sigrow>div{flex:1}
+  .nl-line{border-bottom:0.75pt solid #000;min-height:14pt;padding-bottom:2pt}
   .pr-notes{white-space:pre-line}
   .pr-foot{margin-top:10pt;padding-top:6pt;border-top:0.75pt solid #bbb;font-size:8.5pt;color:#555}
   .pr-key{font-family:Consolas,monospace;font-size:20pt;letter-spacing:1pt;border:1.5pt dashed var(--mag);padding:12pt;text-align:center;margin:14pt 0}
@@ -398,6 +430,8 @@ const I = {
   upload: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>',
   dice: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M12 12h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/></svg>',
   trash: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+  will: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>',
+  willBig: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>',
   list: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>'
 };
 
@@ -733,6 +767,7 @@ function viewContent() {
     case "pw": return viewPw();
     case "help": return viewHelp();
     case "abos": return viewAbos();
+    case "nachlass": return viewNachlass();
     default: return viewSettings();
   }
 }
@@ -751,6 +786,7 @@ function viewMain() {
         ${tab("devices", "Geräte", I.pc, "pc")}
         ${tab("pw", "Passwörter", I.key)}
         ${tab("abos", "Abos", I.repeat)}
+        ${tab("nachlass", "Nachlass", I.will)}
       </nav>
       <span class="spacer"></span>
       ${ho ? `<button class="btn p" data-act="handover">${I.key} Passwort setzen</button>` : ""}
@@ -776,6 +812,7 @@ function viewHome() {
       <button class="tile" data-act="go" data-id="devices"><span class="tic">${I.pcBig}</span><span><b>Geräte</b><span class="muted">${d.pcs.length} ${d.pcs.length === 1 ? "Gerät" : "Geräte"} erfasst</span></span></button>
       <button class="tile" data-act="go" data-id="abos"><span class="tic">${I.repeatBig}</span><span><b>Abos</b><span class="muted">${(() => { const n = aboEntries().filter(e => e.abo.status !== "gekündigt").length, sm = aboSums(), h = aboHints().length; return n ? `${n} aktiv · ${sm.map(x => money(x.month, x.cur)).join(" + ")}/Mt.${h ? ` · <span class="warnword">${h} demnächst fällig</span>` : ""}` : "Noch keine Abos"; })()}</span></span></button>
       <button class="tile" data-act="go" data-id="pw"><span class="tic">${I.keyBig}</span><span><b>Passwörter</b><span class="muted">${d.entries.length} ${d.entries.length === 1 ? "Eintrag" : "Einträge"}${(() => { const st = secStats(); return (st.weak ? ` · <span class="warnword">${st.weak} schwach</span>` : "") + (st.dup ? ` · <span class="warnword">${st.dup} mehrfach</span>` : ""); })()}</span></span></button>
+      <button class="tile" data-act="go" data-id="nachlass"><span class="tic">${I.willBig}</span><span><b>Nachlass</b><span class="muted">${(() => { const n = S.data.entries.filter(nlIncluded).length; return n ? n + " Konten für den Ausdruck" : "Digitalen Nachlass vorbereiten"; })()}</span></span></button>
     </div>
     <section class="tips">
       <div class="row" style="gap:10px;align-items:center"><span class="tic small">${I.shield}</span><h2 style="font-size:16px">Sicherheitstipps für gute Passwörter</h2></div>
@@ -1460,11 +1497,277 @@ function printAbos(withCreds) {
   setTimeout(() => window.print(), 50);
 }
 
+// ----- Digitaler Nachlass -----
+// Aufbau nach der Vorlage «Digitaler Nachlass». Hinweise erscheinen nur in der App, nicht im Ausdruck.
+// Passwörter werden nie gedruckt, nur Dienst, Benutzername und was zu tun ist.
+const NL_INTRO = [
+  "Dieses Dokument dient der strukturierten Erfassung Ihrer digitalen Vermögenswerte, Konten und Daten. Es unterstützt Ihre Angehörigen im Ernstfall dabei, in Ihrem Sinne zu handeln sowie unnötige Kosten und Datenverluste zu vermeiden.",
+  "Wählen Sie pro Abschnitt aus, welche Einträge in den Ausdruck kommen. Ihre Auswahl bleibt für spätere Ausdrucke gespeichert.",
+  "Überprüfen Sie die Angaben regelmässig (mindestens einmal pro Jahr) und drucken Sie das Dokument neu aus.",
+  "Erwähnen Sie die Existenz dieses Dokuments kurz in Ihrem handschriftlichen Testament oder Vorsorgeauftrag, damit es rechtlich eindeutig zugeordnet werden kann."
+];
+const NL_AUTH = "Hiermit ermächtige ich die genannte Vertrauensperson, meine digitalen Konten, Abonnements, Daten und Online-Profile im Falle meiner Urteilsunfähigkeit oder meines Todes gemäss den folgenden Anweisungen zu verwalten, zu sichern, zu übertragen oder aufzulösen.";
+const NL = [
+  { id: "email", title: "E-Mail und Messenger", user: "Benutzername / E-Mail / Tel", note: "Bemerkungen",
+    actions: ["Konto löschen", "Daten/Fotos sichern", "Nachrichten archivieren", "Konto an Vertrauensperson übergeben"],
+    suggest: ["WhatsApp", "Signal", "iMessage", "Telegram", "Threema"],
+    hint: ["Notieren Sie alle Ihre E-Mail-Adressen sowie sämtliche genutzten Messenger-Dienste (z. B. WhatsApp, Signal, Telegram, iMessage).",
+      "E-Mail-Konten sind besonders wichtig, da Kündigungsbestätigungen oder Passwörter zur Wiederherstellung anderer Dienste fast immer an diese Adressen gesendet werden.",
+      "Tragen Sie die jeweilige E-Mail-Adresse, die verknüpfte Mobilnummer oder den Benutzernamen ein und legen Sie fest, was zu tun ist."] },
+  { id: "social", title: "Social Media & Netzwerke", user: "Profilname / E-Mail", note: "Bemerkungen / Nachlasskontakt",
+    actions: ["In Gedenkzustand versetzen", "Profil komplett löschen", "Inhalte sichern, dann löschen"],
+    suggest: ["Facebook", "Instagram", "LinkedIn", "X (Twitter)", "TikTok"],
+    hint: ["Notieren Sie alle Konten bei sozialen Netzwerken und beruflichen Plattformen (z. B. Facebook, Instagram, LinkedIn, X, TikTok).",
+      "In Gedenkzustand versetzen: Das Profil bleibt als Erinnerungsseite bestehen. Profil komplett löschen: Konto und Beiträge werden dauerhaft entfernt. Inhalte sichern: Fotos und Beiträge vor der Löschung herunterladen.",
+      "Vermerken Sie, falls Sie in den Einstellungen der Apps bereits einen Nachlasskontakt hinterlegt haben."] },
+  { id: "cloud", title: "Cloudspeicher und Fotos", user: "Profilname / E-Mail", note: "Bemerkungen / Nachlasskontakt",
+    actions: ["Fotos/Daten sichern, dann löschen", "Konto an Vertrauensperson übergeben", "Konto löschen"],
+    suggest: ["Google", "Apple iCloud", "Microsoft", "Dropbox", "Swisscom"],
+    hint: ["Erfassen Sie alle Cloud-Dienste und Online-Fotogalerien (z. B. Google Fotos, Apple iCloud, Microsoft OneDrive, Dropbox).",
+      "Legen Sie fest, ob Fotos und Videos vor der Kontenlöschung auf einem lokalen Speichermedium für die Familie gesichert werden sollen.",
+      "Prüfen Sie, ob ein Konto als Organisator einer Familie dient. Eine Löschung entzieht Familienmitgliedern den Zugriff auf geteilten Speicher, gekaufte Apps, Lizenzen oder Kinder-Konten."] },
+  { id: "web", title: "Webhosting und Domänen", web: true, user: "Anmeldung", note: "Bemerkungen / Nachlasskontakt",
+    actions: ["An Vertrauensperson übertragen", "Fristgerecht kündigen"], suggest: [],
+    hint: ["Erfassen Sie alle Webhosting-Verträge und registrierten Webseiten (Domänen).",
+      "Geben Sie an, ob sie auf eine Vertrauensperson übertragen oder fristgerecht gekündigt werden sollen."] },
+  { id: "finance", title: "Finanzen und Zahlungsdienste", user: "Benutzername / Konto-Nr.", note: "Bemerkungen / Nachlasskontakt",
+    actions: ["Guthaben auszahlen, dann schliessen", "An Vertrauensperson übergeben", "Konto schliessen"],
+    suggest: ["Onlinebanking", "PayPal", "Twint", "Krypto-Börse / Wallet"],
+    hint: ["Erfassen Sie alle digitalen Bezahldienste, Online-Wallets und Krypto-Börsen (z. B. PayPal, Twint, Revolut, Coinbase).",
+      "Weisen Sie Ihre Angehörigen an, bestehende Guthaben vor der Kontenschliessung auf Ihr Hauptbankkonto auszahlen zu lassen.",
+      "PINs und Recovery Keys bleiben im Tresor, sie werden nie gedruckt."] },
+  { id: "abos", title: "Abonnemente und wiederkehrende Zahlungen", user: "Profilname / E-Mail", note: "Bemerkungen / Zahlungsweg",
+    actions: ["Kündigen", "Weiterführen / übernehmen"],
+    suggest: ["Mobile-Abo", "Internet-Abo", "Festnetz-Abo", "TV-Abo", "Zeitungs-Abo"],
+    hint: ["Abos aus dem Tab «Abos» erscheinen hier automatisch, mit Kosten und Zahlungsweg.",
+      "Eine vollständige Liste hilft Ihren Angehörigen, wiederkehrende Abbuchungen über Kreditkarte oder Bankkonto sofort zu stoppen.",
+      "Notieren Sie Kunden- oder Vertragsnummern, um Kündigungen zu beschleunigen."] },
+  { id: "devices", title: "Geräte und Hardware", devices: true, user: "Benutzer", note: "Bemerkungen",
+    actions: ["Daten sichern, dann zurücksetzen", "Gerät an Vertrauensperson übergeben", "Daten löschen und entsorgen"],
+    suggest: ["Smartphone", "Tablet", "Notebook", "NAS", "Externe Festplatte"],
+    hint: ["PCs aus dem Tab «Geräte» erscheinen hier automatisch. Ergänzen Sie Smartphone, Tablet, externe Festplatten oder NAS.",
+      "Das Smartphone ist zentral für die Zwei-Faktor-Anmeldung (SMS-Codes, Authenticator-Apps). Beschreiben Sie oben unter «Passwörter», wo der PIN hinterlegt ist.",
+      "Bestimmen Sie, was mit den lokalen Daten auf Ihren Geräten geschehen soll."] },
+  { id: "shop", title: "Onlineshopping und sonstige Konten", user: "Benutzername", note: "Bemerkungen",
+    actions: ["Konto löschen", "Gutscheine/Punkte nutzen, dann löschen", "Lieferungen prüfen, Karten entfernen, löschen"],
+    suggest: ["Amazon", "Zalando", "Digitec / Galaxus", "Kundenkarten"],
+    hint: ["Notieren Sie Online-Shops (z. B. Amazon, Zalando, Digitec/Galaxus) sowie sonstige Foren, Kundenkarten oder Buchungsplattformen.",
+      "Angehörige müssen prüfen, ob noch Lieferungen ausstehen, und hinterlegte Kreditkarten aus den Profilen entfernen.",
+      "Notieren Sie offene Gutscheine oder Bonuspunkte, die Angehörige nutzen können."] }
+];
+const NL_KW = [
+  ["social", ["facebook", "instagram", "linkedin", "twitter", "x.com", "tiktok", "xing", "snapchat", "pinterest", "youtube", "reddit", "mastodon", "threads"]],
+  ["finance", ["bank", "e-banking", "ebanking", "postfinance", "ubs", "raiffeisen", "credit suisse", "zkb", "bekb", "valiant", "migros bank", "paypal", "twint", "revolut", "wise", "neon", "yuh", "coinbase", "binance", "kraken", "bitcoin", "wallet", "visa", "mastercard", "cembra", "viseca", "swissquote", "kreditkarte"]],
+  ["email", ["mail", "outlook", "hotmail", "bluewin", "gmx", "proton", "whatsapp", "signal", "telegram", "threema", "imessage", "teams", "skype"]],
+  ["cloud", ["icloud", "apple id", "onedrive", "dropbox", "google", "drive", "fotos", "photos", "flickr", "pcloud", "mycloud", "swisscom", "box.com"]],
+  ["web", ["hosting", "domain", "hostpoint", "cyon", "infomaniak", "metanet", "godaddy", "ionos", "strato", "wordpress", "wix", "nic.ch", "switch.ch", "cloudflare"]],
+  ["shop", ["amazon", "zalando", "galaxus", "digitec", "ricardo", "tutti", "ebay", "aliexpress", "temu", "ikea", "coop", "migros", "manor", "booking", "airbnb", "sbb"]]
+];
+function nlDoc() {
+  const d = S.data;
+  if (!d._nl) { try { d._nl = JSON.parse(d.nachlass || "{}") || {}; } catch (e) { d._nl = {}; } }
+  const n = d._nl;
+  n.person = n.person || {}; n.vertrauen = n.vertrauen || {}; n.pw = n.pw || {}; n.rows = n.rows || []; n.devices = n.devices || {};
+  return n;
+}
+function setData(nd) { const old = S.data && S.data._nl; S.data = nd; if (old) S.data._nl = old; }
+// Alle Nachlass-Speichervorgänge laufen nacheinander, damit sich schnelle Änderungen nicht überschreiben.
+let nlTimer = null, nlQueue = Promise.resolve();
+function nlEnqueue(fn) {
+  const p = nlQueue.then(fn).catch(e => toast(errText(e)));
+  nlQueue = p;
+  return p;
+}
+function nlSaveDoc() {
+  clearTimeout(nlTimer);
+  nlTimer = setTimeout(() => nlEnqueue(async () => {
+    const doc = nlDoc(); doc.updated = new Date().toISOString();
+    setData(await api.saveNachlass(JSON.stringify(doc)));
+  }), 300);
+}
+function nlAutoSection(e) {
+  if (e.abo && e.abo.active) return "abos";
+  const t = (e.title + " " + (e.url || "")).toLowerCase();
+  for (const [sec, kws] of NL_KW) if (kws.some(k => t.includes(k))) return sec;
+  const c = catName(e.categoryId).toLowerCase();
+  if (/mail|messenger/.test(c)) return "email";
+  if (/bank|finanz|zahl/.test(c)) return "finance";
+  if (/social|netzwerke/.test(c)) return "social";
+  if (/cloud|foto/.test(c)) return "cloud";
+  if (/hosting|domain/.test(c)) return "web";
+  return "shop";
+}
+function nlAutoInclude(e) { return !/windows|wlan|netzwerk/.test(catName(e.categoryId).toLowerCase()) && !/^wlan /i.test(e.title || ""); }
+function nlSection(e) { return (e.nachlass && e.nachlass.section) || nlAutoSection(e); }
+function nlIncluded(e) { const i = e.nachlass && e.nachlass.include; return i === "ja" || (i !== "nein" && nlAutoInclude(e)); }
+function pcLabel(pc) {
+  const f = k => ((pc.fields || []).find(x => x.key === k) || {}).value || "";
+  const m = [f("Hersteller"), f("Modell")].filter(Boolean).join(" ");
+  return { name: pc.name + (m ? " (" + m + ")" : ""), user: f("Hauptbenutzer") };
+}
+// Alle Zeilen eines Abschnitts: Passwort-Einträge, PCs, eigene Zeilen
+function nlRows(sec) {
+  const doc = nlDoc(), out = [];
+  S.data.entries.filter(e => nlSection(e) === sec.id).forEach(e => {
+    const n = e.nachlass || {}, a = e.abo && e.abo.active ? e.abo : null;
+    out.push({ kind: "entry", key: e.id, dienst: e.title, benutzer: e.userName || "", anbieter: hostOf(e.url), twofa: n.twofa || "", action: n.action || "", note: n.note || "",
+      auto: a ? [a.payment, a.cost ? money(a.cost, a.currency) + "/" + aboInt(a)[2] : ""].filter(Boolean).join(" · ") : "", inc: nlIncluded(e), sectionSet: !!n.section });
+  });
+  if (sec.devices) S.data.pcs.forEach(pc => {
+    const n = doc.devices[pc.id] || {}, l = pcLabel(pc);
+    out.push({ kind: "pc", key: pc.id, dienst: l.name, benutzer: n.benutzer != null ? n.benutzer : l.user, twofa: n.twofa || "", action: n.action || "", note: n.note || "", inc: n.include !== "nein" });
+  });
+  doc.rows.filter(r => r.section === sec.id).forEach(r => out.push({ kind: "row", key: r.id, dienst: r.dienst || "", benutzer: r.benutzer || "", anbieter: r.anbieter || "", twofa: r.twofa || "", action: r.action || "", note: r.note || "", inc: true }));
+  return out;
+}
+function nlSel(name, val, opts, cls) {
+  const all = val && !opts.includes(val) ? [...opts, val] : opts;
+  return `<select class="field nlsel ${cls || ""}" data-f="${name}"><option value="">–</option>${all.map(o => `<option ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+}
+function nlRowHtml(sec, r) {
+  const ro = r.kind !== "row";
+  const txt = (f, v, ph) => `<input class="field nlin" data-f="${f}" value="${esc(v)}" placeholder="${esc(ph || "")}">`;
+  return `<tr data-kind="${r.kind}" data-key="${esc(r.key)}" class="${r.inc ? "" : "off"}">
+    <td class="nlck">${r.kind === "row" ? "" : `<input type="checkbox" data-f="include" ${r.inc ? "checked" : ""} title="In den Ausdruck aufnehmen">`}</td>
+    <td>${ro ? `<b>${esc(r.dienst)}</b>` : txt("dienst", r.dienst, sec.web ? "Domain" : "Dienst")}</td>
+    ${sec.web ? `<td>${ro ? esc(r.anbieter) : txt("anbieter", r.anbieter, "Anbieter")}</td>` : ""}
+    <td>${r.kind === "entry" ? esc(r.benutzer) : txt("benutzer", r.benutzer, "")}</td>
+    ${sec.web ? "" : `<td>${nlSel("twofa", r.twofa, ["ja", "nein"])}</td>`}
+    <td>${nlSel("action", r.action, sec.actions)}</td>
+    <td>${txt("note", r.note, "")}${r.auto ? `<div class="small muted">${esc(r.auto)}</div>` : ""}</td>
+    <td class="nlx">${r.kind === "entry" ? `<select class="field nlsel nlmove" data-f="section" title="In anderen Abschnitt verschieben">${NL.map(s => `<option value="${s.id}" ${s.id === sec.id ? "selected" : ""}>${esc(s.title)}</option>`).join("")}</select>`
+      : r.kind === "row" ? `<button class="cbtn" data-act="nl-del" data-id="${esc(r.key)}" title="Zeile löschen">${I.trash}</button>` : ""}</td>
+  </tr>`;
+}
+function viewNachlass() {
+  const doc = nlDoc();
+  const inp = (path, label, ph) => { const [a, b] = path.split("."); return `<div><label class="lbl">${label}</label><input class="field" data-doc="${path}" value="${esc((doc[a] || {})[b] || "")}" placeholder="${esc(ph || "")}"></div>`; };
+  const hint = lines => `<details class="nlhint"><summary>Hinweis zum Ausfüllen</summary><ul>${lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul></details>`;
+  const secs = NL.map(sec => {
+    const rows = nlRows(sec), on = rows.filter(r => r.inc), off = rows.filter(r => !r.inc), more = S.nlMore && S.nlMore[sec.id];
+    const present = rows.map(r => r.dienst.toLowerCase());
+    const sugg = sec.suggest.filter(x => !present.some(p => p.startsWith(x.toLowerCase().split(" ")[0])));
+    return `<section class="box nlsec" data-sec="${sec.id}"><div class="row" style="justify-content:space-between;align-items:baseline"><h2 style="font-size:16px">${esc(sec.title)}</h2><span class="small muted">${on.length} im Ausdruck</span></div>
+      ${hint(sec.hint)}
+      <div class="nltable"><table class="nl"><colgroup><col style="width:36px"><col style="width:${sec.web ? 18 : 22}%">${sec.web ? '<col style="width:14%">' : ""}<col style="width:${sec.web ? 14 : 20}%">${sec.web ? "" : '<col style="width:84px">'}<col style="width:230px"><col><col style="width:48px"></colgroup><thead><tr><th></th><th>${sec.web ? "Domain" : sec.devices ? "Gerät" : "Dienst"}</th>${sec.web ? "<th>Anbieter</th>" : ""}<th>${esc(sec.user)}</th>${sec.web ? "" : "<th>2FA</th>"}<th>Was tun?</th><th>${esc(sec.note)}</th><th></th></tr></thead>
+      <tbody>${on.map(r => nlRowHtml(sec, r)).join("") || `<tr><td></td><td colspan="6" class="muted small">Noch keine Einträge in diesem Abschnitt.</td></tr>`}
+      ${more ? off.map(r => nlRowHtml(sec, r)).join("") : ""}</tbody></table></div>
+      <div class="row" style="gap:6px">
+        <button class="btn g" data-act="nl-add" data-id="${sec.id}">${I.plus} Zeile hinzufügen</button>
+        ${sugg.map(x => `<button class="chip" data-act="nl-sugg" data-id="${sec.id}|${esc(x)}">+ ${esc(x)}</button>`).join("")}
+        ${off.length ? `<span class="spacer"></span><button class="btn g" data-act="nl-more" data-id="${sec.id}">${more ? "Nicht ausgewählte ausblenden" : `${off.length} weitere ${off.length === 1 ? "Eintrag" : "Einträge"} aus der Passwortliste`}</button>` : ""}
+      </div></section>`;
+  }).join("");
+  return `<div class="pagehead"><div class="t"><h1>Digitaler Nachlass</h1><div class="muted">Was mit Ihren Konten, Abos und Geräten geschehen soll, für Ihre Angehörigen.</div></div>
+      <div class="row"><button class="btn p" data-act="nl-print">${I.print} Drucken / PDF</button></div></div>
+    <div id="nl" class="stack" style="gap:16px;max-width:1200px">
+    <section class="box tint"><h2 style="font-size:15px">Hinweise zum Dokument</h2><ul class="nlintro">${NL_INTRO.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
+      <div class="small muted">Passwörter, PINs und Geheimcodes werden nie gedruckt. Das Dokument beschreibt nur den Weg dorthin.</div></section>
+    <section class="box"><h2 style="font-size:16px">Rechtliche Ermächtigung</h2><div style="color:#4A4450">${esc(NL_AUTH)}</div></section>
+    <div class="nlgrid">
+      <section class="box"><h2 style="font-size:16px">Persönliche Angaben</h2><div class="fgrid">
+        ${inp("person.vorname", "Vorname")}${inp("person.nachname", "Nachname")}${inp("person.geburt", "Geburtsdatum", "TT.MM.JJJJ")}${inp("person.adresse", "Adresse", "Strasse, Nr., PLZ Ort")}</div></section>
+      <section class="box"><h2 style="font-size:16px">Vertrauensperson und Bevollmächtigung</h2><div class="fgrid">
+        ${inp("vertrauen.vorname", "Vorname")}${inp("vertrauen.nachname", "Nachname")}${inp("vertrauen.kontakt", "Telefon / E-Mail")}${inp("vertrauen.rolle", "Beziehung / Rolle", "z. B. Ehepartner, Kind, Geschwister")}</div></section>
+    </div>
+    <section class="box"><h2 style="font-size:16px">Passwörter</h2>
+      ${hint(["Beschreiben Sie den Weg zu Ihren Zugangsdaten, nicht die Passwörter selbst.", "Notieren Sie, wo das Master-Passwort und der Wiederherstellungsschlüssel dieses Tresors liegen (z. B. Notfallumschlag im Safe).", "Vermerken Sie, wo das Gerät für die Zwei-Faktor-Anmeldung (Smartphone, Authenticator) zu finden ist und wie die Vertrauensperson an den PIN gelangt."])}
+      <div class="fgrid">
+        ${inp("pw.manager", "Passwort-Manager", "StickTresor (KeePass-Datei daten.kdbx auf dem USB-Stick)")}
+        ${inp("pw.stick", "Aufbewahrungsort USB-Stick", "z. B. Schreibtisch, Schublade oben links")}
+        ${inp("pw.master", "Aufbewahrungsort Master-Passwort", "z. B. Notfallumschlag im Safe")}
+        ${inp("pw.rec", "Aufbewahrungsort Wiederherstellungsschlüssel", "z. B. Bankschliessfach")}
+        ${inp("pw.physisch", "Aufbewahrungsort physische Zugangsdaten", "z. B. Ordner im Büro")}
+        ${inp("pw.zweiFA", "Zugang 2FA-Gerät / Smartphone-PIN", "z. B. PIN im Tresor")}
+        ${inp("pw.notizen", "Weitere Notizen", "")}</div></section>
+    ${secs}
+    <section class="box"><h2 style="font-size:16px">Bestätigung und Gültigkeit</h2>
+      <div style="color:#4A4450">Dieses Dokument entspricht meinem ausdrücklichen Willen bezüglich meines digitalen Nachlasses.</div>
+      <div class="fgrid">${inp("sign.ort", "Ort")}${inp("sign.datum", "Datum", "leer = Datum des Ausdrucks")}</div>
+      <div class="small muted">Die Unterschrift erfolgt von Hand auf dem Ausdruck.</div></section>
+    </div>`;
+}
+// Lokale Nachlass-Angaben pro Eintrag (gelten sofort, auch bevor gespeichert ist)
+const nlLocal = {};
+function nlEntrySave(id, patch) {
+  const e = S.data.entries.find(x => x.id === id); if (!e) return Promise.resolve();
+  nlLocal[id] = Object.assign({ include: "", section: "", action: "", twofa: "", note: "" }, e.nachlass || {}, nlLocal[id] || {}, patch);
+  e.nachlass = Object.assign({}, nlLocal[id]);
+  return nlEnqueue(async () => {
+    const cur = S.data.entries.find(x => x.id === id) || e, sent = nlLocal[id];
+    if (!sent) return;
+    const r = await api.saveEntry(Object.assign({}, cur, { nachlass: sent, modified: "" }));
+    setData(r.data);
+    if (nlLocal[id] === sent) delete nlLocal[id];
+    // noch nicht gespeicherte lokale Änderungen anderer Einträge erhalten
+    S.data.entries.forEach(x => { if (nlLocal[x.id]) x.nachlass = Object.assign({}, nlLocal[x.id]); });
+  });
+}
+function bindNachlass() {
+  const root = $("#nl"); if (!root) return;
+  root.addEventListener("change", async ev => {
+    const el = ev.target;
+    try {
+      if (el.dataset.doc) {
+        const [a, b] = el.dataset.doc.split("."), doc = nlDoc();
+        doc[a] = doc[a] || {}; doc[a][b] = el.value.trim(); return nlSaveDoc();
+      }
+      const f = el.dataset.f, tr = el.closest("tr"); if (!f || !tr) return;
+      const kind = tr.dataset.kind, key = tr.dataset.key;
+      const val = f === "include" ? (el.checked ? "ja" : "nein") : el.value.trim();
+      if (kind === "entry") {
+        const p = nlEntrySave(key, { [f]: val });
+        if (f === "include" || f === "section") rerenderContent();
+        await p;
+      } else if (kind === "pc") {
+        const doc = nlDoc(); doc.devices[key] = Object.assign({}, doc.devices[key] || {}, { [f]: val }); nlSaveDoc();
+        if (f === "include") tr.classList.toggle("off", val === "nein");
+      } else {
+        const row = nlDoc().rows.find(r => r.id === key); if (row) { row[f] = val; nlSaveDoc(); }
+      }
+    } catch (e) { toast(errText(e)); }
+  });
+}
+function nlAddRow(sec, dienst) {
+  const doc = nlDoc();
+  doc.rows.push({ id: Math.random().toString(36).slice(2, 10), section: sec, dienst: dienst || "" });
+  nlSaveDoc(); rerenderContent();
+  if (!dienst) { const ins = document.querySelectorAll(`.nlsec[data-sec="${sec}"] tr[data-kind=row] [data-f=dienst]`); if (ins.length) ins[ins.length - 1].focus(); }
+}
+
+// Ausdruck im Aufbau der Vorlage, ohne Hinweise und ohne Passwörter
+function printNachlass() {
+  const doc = nlDoc(), p = doc.person, v = doc.vertrauen, w = doc.pw, sg = doc.sign || {};
+  const name = [p.vorname, p.nachname].filter(Boolean).join(" ");
+  const line = (l, val) => `<tr><td>${esc(l)}</td><td>${esc(val || "")}</td></tr>`;
+  const today = new Date().toLocaleDateString("de-CH");
+  const tables = NL.map(sec => {
+    const rows = nlRows(sec).filter(r => r.inc);
+    const head = sec.web ? ["Domain", "Anbieter", "Anmeldung", "Was tun?", sec.note] : [sec.devices ? "Gerät" : "Dienst", sec.user, "2FA", "Was tun?", sec.note];
+    const cells = r => sec.web ? [r.dienst, r.anbieter, r.benutzer, r.action, r.note] : [r.dienst, r.benutzer, r.twofa, r.action, [r.auto, r.note].filter(Boolean).join(" · ")];
+    const body = rows.map(r => `<tr>${cells(r).map(c => `<td>${esc(c || "")}</td>`).join("")}</tr>`).join("") + `<tr class="blank">${head.map(() => "<td>&nbsp;</td>").join("")}</tr>`.repeat(2);
+    const cg = sec.web ? [22, 18, 16, 22, 22] : [22, 22, 6, 24, 26];
+    return `<div class="pr-sec pr-pw nl-pr"><h2>${esc(sec.title)}</h2><table style="table-layout:fixed"><colgroup>${cg.map(w => `<col style="width:${w}%">`).join("")}</colgroup><tr>${head.map(h => `<th>${esc(h)}</th>`).join("")}</tr>${body}</table></div>`;
+  }).join("");
+  $("#print").innerHTML = `<style>@page{@bottom-left{content:"Digitaler Nachlass${name ? " · " + cssStr(name) : ""} · Stand ${today}"}}</style><div class="pr-page nl-doc">
+    <div class="pr-title" style="margin-top:0">Digitaler Nachlass${name ? " – " + esc(name) : ""}</div>
+    <div class="pr-sec"><h2>Rechtliche Ermächtigung</h2><p>${esc(NL_AUTH)}</p></div>
+    <div class="pr-sec"><h2>Persönliche Angaben</h2><table>${line("Vorname", p.vorname)}${line("Nachname", p.nachname)}${line("Geburtsdatum", p.geburt)}${line("Adresse", p.adresse)}</table></div>
+    <div class="pr-sec"><h2>Vertrauensperson und Bevollmächtigung</h2><table>${line("Vorname", v.vorname)}${line("Nachname", v.nachname)}${line("Telefon / E-Mail", v.kontakt)}${line("Beziehung / Rolle", v.rolle)}</table></div>
+    <div class="pr-sec"><h2>Passwörter</h2><table>${line("Passwort-Manager", w.manager || "StickTresor (KeePass-Datei daten.kdbx auf dem USB-Stick)")}${w.stick ? line("Aufbewahrungsort USB-Stick", w.stick) : ""}${line("Aufbewahrungsort Master-Passwort", w.master)}${line("Aufbewahrungsort Wiederherstellungsschlüssel", w.rec)}${line("Aufbewahrungsort physische Zugangsdaten", w.physisch)}${line("Zugang 2FA-Gerät / Smartphone-PIN", w.zweiFA)}${w.notizen ? line("Weitere Notizen", w.notizen) : ""}</table>
+      <p class="small">Die Datei daten.kdbx kann auch mit KeePass, KeePassXC (PC), KeePassDX (Android) oder Strongbox (iPhone) und dem Master-Passwort geöffnet werden.</p></div>
+    ${tables}
+    <div class="pr-sec nl-sign"><h2>Bestätigung und Gültigkeit</h2><p>Dieses Dokument entspricht meinem ausdrücklichen Willen bezüglich meines digitalen Nachlasses.</p>
+      <div class="nl-sigrow"><div><div class="nl-line">${esc([sg.ort, sg.datum || today].filter(Boolean).join(", "))}</div><div class="small">Ort, Datum</div></div><div><div class="nl-line">&nbsp;</div><div class="small">Unterschrift${name ? " " + esc(name) : ""}</div></div></div></div>
+  </div>`;
+  setTimeout(() => window.print(), 50);
+}
+
 // ----- Hilfe -----
 function viewHelp() {
   const ho = S.data.mode === "uebergabe";
   const sec = (id, title, body, open) => `<details class="help" id="h-${id}" ${open ? "open" : ""}><summary>${title}</summary><div class="helpbody">${body}</div></details>`;
-  const toc = [["start", "Erste Schritte"], ["geraete", "Geräte"], ["pw", "Passwörter"], ["abos", "Abos"], ["import", "Importieren"], ["druck", "Drucken"], ["sicher", "Sicherheit"], ["backup", "Sicherung"], ["update", "Updates"], ["keepass", "KeePass"]];
+  const toc = [["start", "Erste Schritte"], ["geraete", "Geräte"], ["pw", "Passwörter"], ["abos", "Abos"], ["import", "Importieren"], ["druck", "Drucken"], ["sicher", "Sicherheit"], ["backup", "Sicherung"], ["update", "Updates"], ["nachlass", "Nachlass"], ["keepass", "KeePass"]];
   if (hasSupport(P)) toc.push(["support", "Hilfe von " + P.firma]);
   if (ho) toc.unshift(["dm", "Übergabe"]);
   const who = P ? esc(P.firma) : "Ihr IT-Partner";
@@ -1555,6 +1858,14 @@ function viewHelp() {
       <li>Bei jedem Start wird vor der ersten Änderung automatisch eine verschlüsselte Kopie im Ordner <b>Backup</b> auf dem Stick angelegt. Die letzten 20 bleiben erhalten.</li>
       <li>Da ein USB-Stick verloren gehen oder kaputtgehen kann: Zahnrad → <b>«Sicherung an anderen Ort»</b>, z.B. auf den PC oder eine externe Festplatte.</li>
       <li>Eine Sicherung zurückholen: Programm schliessen, die gewünschte Datei aus <b>Backup</b> nach <b>daten.kdbx</b> kopieren (die alte vorher umbenennen).${P ? " Bei Fragen hilft " + who + "." : ""}</li>
+    </ul>`)}
+  ${sec("nachlass", "Digitaler Nachlass", `
+    <ul>
+      <li>Im Tab <b>Nachlass</b> halten Sie fest, was Ihre Angehörigen mit Ihren Konten, Abos und Geräten tun sollen. Der Aufbau folgt der Vorlage «Digitaler Nachlass».</li>
+      <li>Einträge aus der Passwortliste, Abos und PCs erscheinen automatisch im passenden Abschnitt. Mit dem Häkchen wählen Sie, was in den Ausdruck kommt. Die Auswahl bleibt gespeichert.</li>
+      <li>Pro Eintrag wählen Sie <b>«Was tun?»</b>, ob <b>2FA</b> aktiv ist, und eine Bemerkung. Dieselben Angaben finden Sie im Bearbeiten-Fenster des Eintrags unter <b>«Digitaler Nachlass»</b>.</li>
+      <li>Dienste, die nicht in der Passwortliste stehen (z. B. WhatsApp), fügen Sie mit <b>«Zeile hinzufügen»</b> oder den Vorschlägen hinzu.</li>
+      <li><b>«Drucken / PDF»</b> erstellt das Dokument zum Unterschreiben. <b>Passwörter werden nie gedruckt</b>, nur wo sie zu finden sind.</li>
     </ul>`)}
   ${sec("update", "Updates", `
     <ul>
@@ -1699,19 +2010,35 @@ function entryDialog(entry) {
       </div>
       <div><label class="lbl" for="e-url">Adresse / URL</label><input id="e-url" class="field" value="${esc(entry.url || "")}" placeholder="z.B. 192.168.1.1 oder https://…"></div>
       <div><label class="lbl" for="e-notes">Notizen</label><textarea id="e-notes" class="field" rows="3">${esc(entry.notes || "")}</textarea></div>
+      ${(() => {
+        const n = entry.nachlass || {}, auto = isNew ? "shop" : nlAutoSection(entry), autoInc = isNew ? true : nlAutoInclude(entry);
+        const secT = id => (NL.find(x => x.id === id) || {}).title || "";
+        const cur = n.section || auto, acts = (NL.find(x => x.id === cur) || NL[0]).actions;
+        return `<details class="nlbox" ${entry.nachlass ? "open" : ""}><summary>${I.will} Digitaler Nachlass</summary><div class="fgrid" style="margin-top:10px">
+          <div><label class="lbl" for="e-nl-inc">Im Nachlass-Ausdruck</label><select id="e-nl-inc" class="field"><option value="">Automatisch (${autoInc ? "ja" : "nein"})</option><option value="ja" ${n.include === "ja" ? "selected" : ""}>Ja</option><option value="nein" ${n.include === "nein" ? "selected" : ""}>Nein</option></select></div>
+          <div><label class="lbl" for="e-nl-sec">Abschnitt</label><select id="e-nl-sec" class="field"><option value="">Automatisch (${esc(secT(auto))})</option>${NL.map(x => `<option value="${x.id}" ${n.section === x.id ? "selected" : ""}>${esc(x.title)}</option>`).join("")}</select></div>
+          <div><label class="lbl" for="e-nl-act">Was tun?</label><select id="e-nl-act" class="field"><option value="">–</option>${[...new Set([...acts, ...(n.action ? [n.action] : [])])].map(o => `<option ${o === n.action ? "selected" : ""}>${esc(o)}</option>`).join("")}</select></div>
+          <div><label class="lbl" for="e-nl-2fa">Zwei-Faktor (2FA)</label><select id="e-nl-2fa" class="field"><option value="">–</option><option ${n.twofa === "ja" ? "selected" : ""}>ja</option><option ${n.twofa === "nein" ? "selected" : ""}>nein</option></select></div>
+          <div style="grid-column:1/-1"><label class="lbl" for="e-nl-note">Bemerkung für die Angehörigen</label><input id="e-nl-note" class="field" value="${esc(n.note || "")}" placeholder="z. B. Nachlasskontakt hinterlegt, Kundennummer …"></div>
+        </div></details>`; })()}
       <div id="dlg-msg"></div>
       <div class="acts">${isNew ? "" : '<button class="btn danger" type="button" id="e-del" style="margin-right:auto">Löschen</button>'}
         <button class="btn" type="button" data-close>Abbrechen</button><button class="btn p" type="submit">Speichern</button></div>
     </form>`, o => {
       const pw = o.querySelector("#e-pw");
       o.querySelector("#e-show").addEventListener("click", ev => { const t = pw.type === "password"; pw.type = t ? "text" : "password"; ev.target.textContent = t ? "Verbergen" : "Anzeigen"; });
+      o.querySelector("#e-nl-sec").addEventListener("change", ev => {
+        const sec = NL.find(x => x.id === (ev.target.value || (isNew ? "shop" : nlAutoSection(entry)))) || NL[0], a = o.querySelector("#e-nl-act"), cur = a.value;
+        a.innerHTML = `<option value="">–</option>` + sec.actions.map(x => `<option ${x === cur ? "selected" : ""}>${esc(x)}</option>`).join("");
+      });
       const len = o.querySelector("#e-len");
       len.addEventListener("input", () => o.querySelector("#e-lenv").textContent = len.value);
       o.querySelector("#e-gen").addEventListener("click", () => { pw.value = genPassword(+len.value, o.querySelector("#e-sym").checked); pw.type = "text"; o.querySelector("#e-show").textContent = "Verbergen"; });
       o.querySelector("#ef").addEventListener("submit", async ev => {
         ev.preventDefault();
         const e = { id: entry.id || "", categoryId: o.querySelector("#e-cat").value, title: o.querySelector("#e-title").value, userName: o.querySelector("#e-user").value,
-          password: pw.value, url: o.querySelector("#e-url").value, notes: o.querySelector("#e-notes").value, devices: [...o.querySelectorAll(".e-dev:checked")].map(i => i.value), modified: "" };
+          password: pw.value, url: o.querySelector("#e-url").value, notes: o.querySelector("#e-notes").value, devices: [...o.querySelectorAll(".e-dev:checked")].map(i => i.value), modified: "",
+          nachlass: { include: o.querySelector("#e-nl-inc").value, section: o.querySelector("#e-nl-sec").value, action: o.querySelector("#e-nl-act").value, twofa: o.querySelector("#e-nl-2fa").value, note: o.querySelector("#e-nl-note").value.trim() } };
         try { const r = await api.saveEntry(e); S.data = r.data; closeDialog(); toast("Gespeichert."); render(); }
         catch (err) { dlgMsg(errText(err)); }
       });
@@ -1866,6 +2193,7 @@ function bind() {
   });
   bindSearch();
   bindGrid();
+  bindNachlass();
   on("#s-lock", "change", ev => { setLockMin(+ev.target.value); toast("Gespeichert."); });
   bindActs(document);
 }
@@ -1898,6 +2226,11 @@ async function act(a, id, el) {
       case "quit": await api.quit(); return;
       case "new-self": await run("Tresor wird angelegt …", () => api.create("", true)); return refresh();
       case "partner-edit": return partnerDialog();
+      case "nl-print": return printNachlass();
+      case "nl-add": return nlAddRow(id);
+      case "nl-sugg": { const [sec, name] = id.split("|"); return nlAddRow(sec, name); }
+      case "nl-more": S.nlMore = S.nlMore || {}; S.nlMore[id] = !S.nlMore[id]; return rerenderContent();
+      case "nl-del": { const doc = nlDoc(); doc.rows = doc.rows.filter(r => r.id !== id); nlSaveDoc(); return rerenderContent(); }
       case "upd-check": {
         try { S.update = await run("Suche nach Updates …", () => api.checkUpdate()); } catch (e) { S.update = { error: errText(e) }; }
         const box = $("#upd"); if (box) box.innerHTML = updBox(); return;
@@ -1986,7 +2319,7 @@ function rerenderContent() {
   const c = $("#content"); if (!c) return render();
   closePopover();
   c.innerHTML = viewContent();
-  bindActs(c); bindSearch(); bindGrid();
+  bindActs(c); bindSearch(); bindGrid(); bindNachlass();
 }
 
 // ---------- Automatische Sperre ----------

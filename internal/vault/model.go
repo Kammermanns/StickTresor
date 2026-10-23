@@ -30,16 +30,63 @@ type Category struct {
 }
 
 type Entry struct {
-	ID         string   `json:"id"`
-	CategoryID string   `json:"categoryId"`
-	Title      string   `json:"title"`
-	UserName   string   `json:"userName"`
-	Password   string   `json:"password"`
-	URL        string   `json:"url"`
-	Notes      string   `json:"notes"`
-	Devices    []string `json:"devices"` // Geräte, zu denen der Eintrag gehört
-	Abo        *Abo     `json:"abo"`     // nil = kein Abo (beim Speichern: nil = unverändert)
-	Modified   string   `json:"modified"`
+	ID         string    `json:"id"`
+	CategoryID string    `json:"categoryId"`
+	Title      string    `json:"title"`
+	UserName   string    `json:"userName"`
+	Password   string    `json:"password"`
+	URL        string    `json:"url"`
+	Notes      string    `json:"notes"`
+	Devices    []string  `json:"devices"`  // Geräte, zu denen der Eintrag gehört
+	Abo        *Abo      `json:"abo"`      // nil = kein Abo (beim Speichern: nil = unverändert)
+	Nachlass   *Nachlass `json:"nachlass"` // nil = keine Angaben (beim Speichern: nil = unverändert)
+	Modified   string    `json:"modified"`
+}
+
+// Nachlass sind die Angaben für den digitalen Nachlass (nur im Bearbeiten-Fenster und im Nachlass-Tab).
+type Nachlass struct {
+	Include string `json:"include"` // "ja", "nein" oder "" (= Vorschlag nach Kategorie)
+	Section string `json:"section"` // Abschnitt, "" = automatisch
+	Action  string `json:"action"`  // Was tun?
+	TwoFA   string `json:"twofa"`   // "ja", "nein" oder ""
+	Note    string `json:"note"`    // Bemerkung / Nachlasskontakt
+}
+
+var nachlassFields = []struct {
+	key string
+	get func(n *Nachlass) *string
+}{
+	{"Nachlass-Aufnehmen", func(n *Nachlass) *string { return &n.Include }},
+	{"Nachlass-Bereich", func(n *Nachlass) *string { return &n.Section }},
+	{"Nachlass-Was", func(n *Nachlass) *string { return &n.Action }},
+	{"Nachlass-2FA", func(n *Nachlass) *string { return &n.TwoFA }},
+	{"Nachlass-Bemerkung", func(n *Nachlass) *string { return &n.Note }},
+}
+
+func getNachlass(e *kp.Entry) *Nachlass {
+	n := &Nachlass{}
+	any := false
+	for _, f := range nachlassFields {
+		if v := get(e, f.key); v != "" {
+			*f.get(n) = v
+			any = true
+		}
+	}
+	if !any {
+		return nil
+	}
+	return n
+}
+
+// setNachlass speichert die Nachlass-Felder; leere Werte werden entfernt.
+func setNachlass(e *kp.Entry, n *Nachlass) {
+	for _, f := range nachlassFields {
+		if v := strings.TrimSpace(*f.get(n)); v != "" {
+			set(e, f.key, v, false)
+		} else {
+			remove(e, f.key)
+		}
+	}
 }
 
 // Abo sind die Angaben zu einem kostenpflichtigen Abo.
@@ -578,7 +625,7 @@ func entryFrom(e *kp.Entry, cat string) Entry {
 	return Entry{
 		ID: uuidStr(e.UUID), CategoryID: cat,
 		Title: get(e, "Title"), UserName: get(e, "UserName"), Password: get(e, "Password"),
-		URL: get(e, "URL"), Notes: get(e, "Notes"), Devices: getDevices(e), Abo: getAbo(e), Modified: mod,
+		URL: get(e, "URL"), Notes: get(e, "Notes"), Devices: getDevices(e), Abo: getAbo(e), Nachlass: getNachlass(e), Modified: mod,
 	}
 }
 
@@ -621,6 +668,9 @@ func (v *Vault) SaveEntry(in Entry) (string, error) {
 	setDevices(e, in.Devices)
 	if in.Abo != nil {
 		setAbo(e, in.Abo)
+	}
+	if in.Nachlass != nil {
+		setNachlass(e, in.Nachlass)
 	}
 	touch(e)
 	return uuidStr(e.UUID), nil

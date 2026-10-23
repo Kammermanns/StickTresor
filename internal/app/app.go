@@ -3,6 +3,7 @@
 package app
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -21,7 +22,7 @@ import (
 )
 
 // Version wird beim Bauen aus dem Git-Tag gesetzt (-ldflags "-X .../internal/app.Version=4.1.0").
-var Version = "4.0"
+var Version = "4.1.0"
 
 // handoverFile merkt sich ohne Passwort, in welchem Übergabe-Schritt der Stick ist:
 //
@@ -385,6 +386,7 @@ type Data struct {
 	Entries      []vault.Entry     `json:"entries"`
 	Sections     []capture.Section `json:"sections"`
 	CustomerKeys []string          `json:"customerKeys"`
+	Nachlass     string            `json:"nachlass"` // allgemeine Nachlass-Angaben (JSON)
 	LastSaved    string            `json:"lastSaved"`
 }
 
@@ -400,7 +402,7 @@ func (a *App) Data() (Data, error) {
 func (a *App) dataLocked() Data {
 	pcs := a.v.PCs()
 	sort.SliceStable(pcs, func(i, j int) bool { return strings.ToLower(pcs[i].Name) < strings.ToLower(pcs[j].Name) })
-	d := Data{Mode: a.v.Mode(), PCs: pcs, Categories: a.v.Categories(), Entries: a.v.Entries(), Sections: capture.Sections, CustomerKeys: capture.CustomerKeys}
+	d := Data{Mode: a.v.Mode(), PCs: pcs, Categories: a.v.Categories(), Entries: a.v.Entries(), Sections: capture.Sections, CustomerKeys: capture.CustomerKeys, Nachlass: a.v.Nachlass()}
 	if t := a.v.LastSaved(); !t.IsZero() {
 		d.LastSaved = t.Format("15:04")
 	}
@@ -742,6 +744,22 @@ func (a *App) Bindings() map[string]any {
 		"removePartner":  a.RemovePartner,
 		"prepareStick":   a.PrepareStick,
 		"checkUpdate":    a.CheckUpdate,
+		"saveNachlass":   a.SaveNachlass,
 		"installUpdate":  a.InstallUpdate,
 	}
+}
+
+// SaveNachlass speichert die allgemeinen Angaben für den digitalen Nachlass
+// (Person, Vertrauensperson, Aufbewahrung, eigene Zeilen, Geräte) verschlüsselt im Tresor.
+func (a *App) SaveNachlass(js string) (Data, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err := a.needOpen(); err != nil {
+		return Data{}, err
+	}
+	if len(js) > 1<<20 || !json.Valid([]byte(js)) {
+		return Data{}, errors.New("Die Nachlass-Angaben sind ungültig.")
+	}
+	a.v.SetNachlass(js)
+	return a.dataLocked(), a.saveErr()
 }
