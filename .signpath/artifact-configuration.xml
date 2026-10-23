@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SignPath-Artefaktkonfiguration für StickTresor.
+     In SignPath unter Project → Artifact Configurations einfügen.
+     Der GitHub-Build lädt StickTresor.exe als ZIP-Artefakt hoch; signiert wird nur diese Exe,
+     und nur wenn Produktname und Version mit dem Release übereinstimmen. -->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="StickTresor.exe" product-name="StickTresor" product-version="${version}">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

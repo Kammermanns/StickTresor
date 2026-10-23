@@ -1,5 +1,12 @@
 # StickTresor
 
+> **English summary:** StickTresor is a free, open-source portable Windows app (single exe, no installation) that runs from a USB stick.
+> It stores PC data sheets, passwords, subscriptions and a "digital estate" (what relatives should do with accounts and devices) in one
+> encrypted KeePass file (KDBX 4, Argon2 + ChaCha20), which can also be opened with KeePass, KeePassXC, KeePassDX or Strongbox.
+> IT service companies can add their own branding (logo, address, support) in a separate `partner.json` file and hand the stick over to
+> their customers, who then set their own master password. No telemetry, no accounts; the app only goes online when the user clicks
+> "check for updates" (GitHub Releases). Downloads: [Releases](https://github.com/Kammermanns/StickTresor/releases). License: MIT.
+
 Portable Windows-App für **PC-Datenblätter, Passwörter und Abos** – eine einzige Exe, keine Installation, läuft direkt vom USB-Stick.
 Alle Daten liegen verschlüsselt in `daten.kdbx` im offenen **KeePass-Format (KDBX 4)** und lassen sich jederzeit auch mit KeePass, KeePassXC, KeePassDX oder Strongbox öffnen.
 

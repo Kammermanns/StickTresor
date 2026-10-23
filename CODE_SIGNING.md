@@ -8,6 +8,14 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 - Keine Dateien von Dritten. Alle verwendeten Bibliotheken liegen als Quellcode im Repository (`third_party/`, `vendor/`).
 - Jede Signatur wird einzeln von Hand freigegeben.
 
+## Ablauf
+
+1. Ein Release wird auf GitHub veröffentlicht (Tag `vX.Y.Z`).
+2. GitHub Actions baut `StickTresor.exe` aus dem Quellcode (Produktname und Version in der Exe aus dem Tag) und lädt sie als Artefakt hoch.
+3. Der Workflow sendet eine Signier-Anfrage an SignPath (`.github/workflows/build.yml`, Artefaktkonfiguration `.signpath/artifact-configuration.xml`).
+4. Der Approver gibt die Anfrage in SignPath von Hand frei.
+5. Die signierte Exe und ihre SHA-256-Prüfsumme werden an das Release angehängt.
+
 ## Rollen
 
 | Rolle | Person |

@@ -1,6 +1,6 @@
 # Baut und testet bei jedem Push. Wird auf GitHub ein Release veröffentlicht (Tag v*, z.B. v4.1.0),
 # hängt der Bau StickTresor.exe und StickTresor.exe.sha256 an (für die Update-Funktion der App).
-# Das Signieren mit SignPath wird hier ergänzt, sobald das Projekt aufgenommen ist.
+# Signiert wird mit SignPath (siehe CODE_SIGNING.md), sobald es eingerichtet ist.
 name: Build
 on:
   push:
@@ -10,9 +10,11 @@ on:
     types: [published]
 permissions:
   contents: write
+  actions: read
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -41,6 +43,36 @@ jobs:
           CGO_ENABLED: "0"
         run: |
           go build -mod=vendor -trimpath -ldflags "-s -w -H windowsgui -X github.com/Kammermanns/StickTresor/internal/app.Version=${{ steps.ver.outputs.v }}" -o StickTresor.exe .
+          sha256sum StickTresor.exe > StickTresor.exe.sha256
+      - name: Unsigniertes Programm bereitstellen
+        id: unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: StickTresor-unsigniert
+          path: StickTresor.exe
+      # Signieren mit SignPath (kostenlos für Open Source, Zertifikat der SignPath Foundation).
+      # Läuft nur bei einem veröffentlichten Release und sobald die Repository-Variable
+      # SIGNPATH_ORGANIZATION_ID und das Secret SIGNPATH_API_TOKEN eingerichtet sind.
+      # Jede Signatur muss in SignPath von Hand freigegeben werden.
+      - name: Signieren (SignPath)
+        id: sign
+        if: github.event_name == 'release' && vars.SIGNPATH_ORGANIZATION_ID != ''
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'StickTresor' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signed
+          parameters: |
+            version: ${{ toJSON(steps.ver.outputs.v) }}
+      - name: Signierte Exe übernehmen
+        if: steps.sign.outcome == 'success'
+        run: |
+          cp signed/StickTresor.exe StickTresor.exe
           sha256sum StickTresor.exe > StickTresor.exe.sha256
       - uses: actions/upload-artifact@v4
         with:
