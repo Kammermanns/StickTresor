@@ -1,0 +1,46 @@
+# Baut und testet bei jedem Push. Bei einem Tag v* (z.B. v4.1.0) entsteht ein Release
+# mit StickTresor.exe und StickTresor.exe.sha256 (für die Update-Funktion der App).
+# Das Signieren mit SignPath wird hier ergänzt, sobald das Projekt aufgenommen ist.
+name: Build
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Tests
+        run: go test -mod=vendor ./internal/...
+      - name: Version bestimmen
+        id: ver
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then echo "v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"; else echo "v=0.0.0-dev" >> "$GITHUB_OUTPUT"; fi
+      - name: Windows-Exe bauen
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: "0"
+        run: |
+          go build -mod=vendor -trimpath -ldflags "-s -w -H windowsgui -X github.com/Kammermanns/StickTresor/internal/app.Version=${{ steps.ver.outputs.v }}" -o StickTresor.exe .
+          sha256sum StickTresor.exe > StickTresor.exe.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StickTresor
+          path: |
+            StickTresor.exe
+            StickTresor.exe.sha256
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            StickTresor.exe
+            StickTresor.exe.sha256

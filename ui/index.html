@@ -1,0 +1,2009 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StickTresor</title>
+<style>
+:root{
+  --mag:#1F6FB2; --mag-btn:#1C65A2; --mag-btn-h:#185689; --mag-text:#154C79; --mag-deep:#103A5D; --mag-soft:#E4EEF7; --mag-softer:#F6F9FC;
+  --ink:#1C1A1E; --ink2:#3A3540; --muted:#5F5966; --line:#E6E1E9; --line2:#D4CDD8; --bg:#F6F5F7; --panel:#FFFFFF; --row:#F7F5F8;
+  --warn-bg:#FFF5E6; --warn-ink:#6B3D00; --err-bg:#FDECEC; --err-ink:#8A1C1C; --ok-ink:#1F6B3A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0}
+a{color:var(--mag-btn-h)}
+.mono{font-family:"Cascadia Mono",Consolas,"Courier New",monospace}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.hidden{display:none!important}
+
+/* Buttons & Felder */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--line2);background:#fff;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#F6F2F7;border-color:#BDB4C2}
+.btn.p{background:var(--mag-btn);border-color:var(--mag-btn);color:#fff;font-weight:600}
+.btn.p:hover{background:var(--mag-btn-h)}
+.btn.g{border-color:transparent;background:transparent;color:#4A4450;min-height:34px;padding:0 10px;font-size:13px}
+.btn.g:hover{background:#F1EDF3;color:var(--ink)}
+.btn.danger{color:#A11B1B}
+.btn.danger:hover{background:var(--err-bg);border-color:#E9B8B8}
+.btn:disabled{opacity:.55;cursor:default}
+.btn svg{flex-shrink:0}
+.field{width:100%;height:42px;border:1px solid var(--line2);border-radius:8px;padding:0 12px;background:#fff}
+textarea.field{height:auto;min-height:84px;padding:10px 12px;resize:vertical;line-height:1.45}
+.field:focus,.btn:focus-visible,.nav:focus-visible{outline:2px solid var(--mag);outline-offset:1px}
+label.lbl{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.err{background:var(--err-bg);color:var(--err-ink);border-radius:8px;padding:10px 12px;font-size:13px}
+.warn{background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:10px 12px;font-size:13px}
+.info{background:#F1EDF3;color:var(--ink2);border-radius:8px;padding:10px 12px;font-size:13px}
+.hint-mag{background:var(--mag-soft);color:var(--mag-deep);border-radius:10px;padding:12px 14px;font-size:13px}
+
+/* Karten (Start, Passwort festlegen) */
+.center{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 16px}
+.card{width:100%;max-width:440px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:36px 34px 26px;box-shadow:0 12px 40px rgba(40,10,30,.08);display:flex;flex-direction:column;gap:18px}
+.card.wide{max-width:620px}
+.card .logo{width:190px;align-self:center}
+.card h1{font-size:22px;font-weight:700}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mag-btn-h)}
+.keybox{border:1px dashed var(--mag);background:var(--mag-softer);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.keybox .key{font-size:20px;letter-spacing:.04em;word-break:break-all}
+.cardfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid #EEEAF0;padding-top:12px;font-size:12px;color:var(--muted)}
+.meter{height:6px;border-radius:3px;background:#EEEAF0;overflow:hidden}
+.meter>div{height:100%;width:0;background:#C0392B;transition:width .2s}
+
+/* Hauptfenster */
+#app{min-height:100vh;display:flex;flex-direction:column}
+#main{flex:1;display:flex;flex-direction:column}
+.banner{background:var(--mag);color:#fff;padding:7px 20px;font-size:13px;font-weight:600;display:flex;gap:10px;flex-wrap:wrap}
+.banner span+span{font-weight:400;opacity:.95}
+header.top{background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header.top img{height:34px}
+.apptitle{display:flex;flex-direction:column;line-height:1.2;flex:1;min-width:160px}
+.apptitle b{font-size:15px}
+.body{flex:1;display:flex;flex-wrap:wrap;align-items:stretch;min-height:0}
+nav.side{flex:1 1 250px;max-width:300px;min-width:230px;background:#fff;border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:3px}
+.sidehead{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:14px 12px 6px;display:flex;align-items:center;gap:6px}
+.sidehead:first-of-type{padding-top:6px}
+.sidehead .btn{min-height:26px;padding:0 6px;margin-left:auto;text-transform:none;letter-spacing:0}
+.nav{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--ink2);text-align:left;cursor:pointer}
+.nav:hover{background:#F1EDF3}
+.nav.on{background:var(--mag-soft);color:var(--mag-text);font-weight:600}
+.nav .two{display:flex;flex-direction:column;line-height:1.25;padding:6px 0;min-width:0}
+.nav .two span:last-child{font-size:12px;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .count{margin-left:auto;font-size:12px;color:var(--muted);font-weight:400}
+.empty-side{padding:6px 12px;color:var(--muted);font-size:13px}
+main.content{flex:999 1 560px;min-width:0;padding:24px 28px 40px;display:flex;flex-direction:column;gap:18px}
+.pagehead{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.pagehead .t{flex:1;min-width:220px;display:flex;flex-direction:column;gap:3px}
+.pagehead h1{font-size:26px;font-weight:700;overflow-wrap:anywhere}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+section.box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+section.box.accent{border-color:var(--mag)}
+section.box.tint{background:var(--mag-softer);border-color:var(--mag)}
+section.box h2{font-size:14px;font-weight:700}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:7px 10px;background:var(--row);border-radius:6px;align-items:baseline}
+.kv.edit{background:transparent;padding:2px 0;align-items:center}
+.kv .v.row{display:flex;align-items:center}
+.sheet{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.sheetcol{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:900px){.sheet{grid-template-columns:1fr}}
+.kv .k{color:var(--muted);font-size:13px}
+.kv .v{font-weight:500;overflow-wrap:anywhere;white-space:pre-line}
+.kv.multi{grid-template-columns:1fr}
+.list{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pw{display:flex;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid #EEEAF0;flex-wrap:wrap}
+.pw:last-child{border-bottom:0}
+.pw .ic{width:36px;height:36px;border-radius:9px;background:var(--mag-soft);color:var(--mag-text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pw .main{flex:1 1 220px;min-width:0;display:flex;flex-direction:column}
+.pw .main b{overflow-wrap:anywhere}
+.pw .main span{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.pw .secret{flex:0 1 210px;min-width:120px;overflow-wrap:anywhere}
+.pw .acts{display:flex;gap:2px;flex-wrap:wrap}
+.emptybox{padding:28px 18px;text-align:center;color:var(--muted)}
+footer.foot{background:#fff;border-top:1px solid var(--line);padding:9px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+footer.foot img{height:20px}
+.legend{display:flex;gap:16px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* Kopfzeile ohne Seitenmenü */
+.logo-btn{border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;gap:12px}
+.brand{font-weight:700;font-size:17px;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+.brand .m{color:var(--mag)}
+.brand.big{font-size:24px}
+footer .brand{font-size:12px;font-weight:600}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:10px}
+.tab{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--ink2);font-weight:500;cursor:pointer}
+.tab:hover{background:#F1EDF3}
+.tab.on{background:var(--mag-soft);color:var(--mag-text);font-weight:600}
+.btn.icon{width:40px;padding:0}
+.btn.icon.on{background:var(--mag-soft);border-color:var(--mag);color:var(--mag-text)}
+main.content{flex:1;width:100%;max-width:1400px;margin:0 auto}
+/* Startseite */
+.home{display:flex;flex-direction:column;gap:20px;align-items:center;padding:12px 0 8px}
+.infocard{width:100%;max-width:640px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 34px;display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center;box-shadow:0 12px 40px rgba(40,10,30,.06)}
+.homelogo{width:260px;max-width:80%}
+.infogrid{display:flex;gap:48px;justify-content:center;flex-wrap:wrap;font-size:15px;line-height:1.6}
+.helpdesk{width:100%;background:var(--mag-softer);border:1px solid var(--mag);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.hdnum{font-size:26px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
+.tiles{width:100%;max-width:820px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.tile{display:flex;gap:16px;align-items:center;text-align:left;padding:22px 24px;background:#fff;border:1px solid var(--line);border-radius:14px;cursor:pointer;min-height:96px}
+.tile:hover{border-color:var(--mag);background:var(--mag-softer)}
+.tile b{display:block;font-size:18px}
+.tile .muted{display:block;font-size:13px}
+.tic{width:56px;height:56px;border-radius:14px;background:var(--mag-soft);color:var(--mag-text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tic.small{width:40px;height:40px;border-radius:10px}
+.devgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.devcard{display:flex;gap:14px;align-items:flex-start;text-align:left;padding:16px 18px;background:#fff;border:1px solid var(--line);border-radius:12px;cursor:pointer}
+.devcard:hover{border-color:var(--mag);background:var(--mag-softer)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border:1px solid var(--line2);border-radius:999px;background:#fff;cursor:pointer;font-weight:500}
+.chip span{color:var(--muted);font-weight:400;font-size:12px}
+.chip:hover{border-color:#BDB4C2;background:#F6F2F7}
+.chip.on{background:var(--mag-soft);border-color:var(--mag);color:var(--mag-text);font-weight:600}
+.chip.add{border-style:dashed;color:var(--muted)}
+.chip svg{margin-right:2px}
+.chiplabel{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);align-self:center;margin-right:4px}
+.catrow{display:flex;gap:8px;align-items:center}
+.catrow .field{height:38px}
+
+/* Passwort-Tabelle */
+.gridwrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto}
+table.grid{width:100%;border-collapse:collapse;table-layout:fixed;min-width:1100px}
+table.grid.prev{table-layout:auto;min-width:0}
+.grid th{position:sticky;top:0;z-index:1;background:#F7F5F8;text-align:left;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line);padding:0;white-space:nowrap}
+.grid th>button{all:unset;display:block;box-sizing:border-box;width:100%;padding:10px;cursor:pointer}
+.grid th>button:hover{color:var(--ink)}
+.grid td{border-bottom:1px solid #EEEAF0;border-right:1px solid #F1EDF3;padding:0;height:38px;position:relative;background:#fff}
+.grid tr:hover td{background:#FCFBFD}
+.grid tr.active td{background:#FFF9FC}
+.grid td:focus-within{box-shadow:inset 0 0 0 2px var(--mag);background:#fff!important}
+.grid .cell{display:block;width:100%;height:38px;border:0;background:transparent;padding:0 10px;font:inherit;box-sizing:border-box;outline:none;color:var(--ink);text-overflow:ellipsis}
+.grid select.cell{padding:0 6px;cursor:pointer}
+.pwcell .cell{padding-right:62px}
+.grid tr:hover .pwcell .cell,.grid tr.active .pwcell .cell{padding-right:122px}
+.cbtns{position:absolute;right:4px;top:5px;display:flex;gap:2px;opacity:0}
+.grid tr:hover .cbtns,.grid tr.active .cbtns,.grid tr:hover .racts .cbtn,.grid tr.active .racts .cbtn{opacity:1}
+.cbtn{width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#4A4450;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.cbtn:hover{background:var(--mag-soft);color:var(--mag-text)}
+.racts{white-space:nowrap;text-align:center;border-right:0!important}
+.racts .cbtn{opacity:0}
+.grid tr.saving td:first-child{box-shadow:inset 3px 0 0 #D68910}
+.grid tr.saved td:first-child{box-shadow:inset 3px 0 0 #1E8449}
+.grid tr.rowerr td{background:var(--err-bg)!important}
+.dialog.wide{max-width:900px}
+.dialog.xwide{max-width:1180px}
+.updnotes{white-space:pre-wrap;margin-top:6px;max-height:160px;overflow:auto;font-size:13px}
+.ok{color:var(--ok-ink);font-weight:600}
+.pfgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.pfgrid{grid-template-columns:1fr}}
+.pfprev{position:sticky;top:0;background:var(--bg);border-radius:12px;padding:14px}
+.pfprev .infocard{max-width:none}
+.sep{height:1px;background:var(--line)}
+.btn.danger-t{color:#A11B1B}
+.lnk{color:var(--mag-btn-h)}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:620px){.choice{grid-template-columns:1fr}}
+.choicebtn{display:flex;flex-direction:column;gap:12px;align-items:flex-start;text-align:left;padding:20px;background:#fff;border:1px solid var(--line);border-radius:14px;cursor:pointer;font:inherit;color:inherit}
+.choicebtn:hover{border-color:var(--mag);background:var(--mag-softer)}
+.choicebtn b{display:block;font-size:16px;margin-bottom:4px}
+.choicebtn .muted{font-size:13px}
+.catbtn{display:flex!important;align-items:center;gap:6px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden}
+.catbtn .catname{flex-shrink:0}
+.devtag{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--mag-soft);color:var(--mag-text);flex-shrink:0}
+.popover{position:fixed;z-index:60;background:#fff;border:1px solid var(--line2);border-radius:12px;box-shadow:0 16px 40px rgba(40,10,30,.18);padding:14px;width:300px}
+.devlist{display:flex;flex-direction:column;gap:2px;max-height:220px;overflow:auto}
+.devopt{display:flex;align-items:center;gap:8px;min-height:30px;cursor:pointer}
+.devopt input{width:16px;height:16px;accent-color:var(--mag-btn)}
+
+/* Passwortbewertung */
+.toolcell .cell{padding-right:10px}
+.grid tr:hover .toolcell .cell,.grid tr.active .toolcell .cell{padding-right:70px}
+.pwtools{position:absolute;right:6px;top:0;bottom:0;display:flex;align-items:center;gap:4px;pointer-events:none}
+.pwtools .cbtns{position:static;display:none;pointer-events:auto}
+.grid tr:hover .pwtools .cbtns,.grid tr.active .pwtools .cbtns{display:flex}
+.pwsec{display:flex;align-items:center;gap:4px;pointer-events:auto}
+.sdot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.sdot.s0{background:#C0392B}.sdot.s1{background:#D68910}.sdot.s2{background:#1E8449}
+.dupn{font-size:11px;font-weight:700;color:var(--mag-deep);background:var(--mag-soft);border-radius:999px;padding:1px 6px}
+.sec{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+.sec i,.dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.s0 i,.dot.s0{background:#C0392B}.s1 i{background:#D68910}.s2 i{background:#1E8449}
+.sec.s0{color:#A93226}.sec.s1{color:#9C640C}.sec.s2{color:#1E6B3A}
+.dup{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:var(--mag-deep);background:var(--mag-soft);border-radius:999px;padding:1px 7px}
+.dot.dupdot{background:var(--mag)}
+.sec-chip{gap:6px}
+.secok{color:#1E6B3A;font-weight:600;font-size:13px}
+.warnword{color:#A93226;font-weight:600}
+/* Sicherheitstipps */
+.tips{width:100%;max-width:640px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 26px;display:flex;flex-direction:column;gap:10px}
+.tips ul{margin:0;padding-left:20px;line-height:1.55;color:#2E2A33}
+.tips li{margin:5px 0}
+
+/* Abos */
+.abobadge{display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:11px;font-weight:600;color:#1F4E79;background:#E8F1FA;border:0;border-radius:999px;padding:3px 9px;margin-right:4px;cursor:pointer;max-width:132px;overflow:hidden;white-space:nowrap;vertical-align:middle}
+.abobadge:hover{background:#D6E6F5}
+.abobadge svg{width:12px;height:12px;flex:none}
+.abobadge.off{color:#5F5966;background:#EEEAF0;text-decoration:line-through}
+.racts{text-align:right!important;padding-right:8px!important}
+.abobadge svg{width:12px;height:12px;flex-shrink:0}
+.cbtn.aboon{color:#1F4E79}
+.racts .cbtn.aboon{opacity:1}
+.abosums{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.abosum{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.abosum b{font-size:18px}
+.abosum.warn{border-color:#D68910;background:#FFF9EF}
+.hints{gap:6px;padding:10px}
+.hint{all:unset;cursor:pointer;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;padding:8px 10px;border-radius:8px;border-left:4px solid #D68910;background:#FFF9EF}
+.hint.kuend{border-left-color:#C0392B;background:#FDF0EE}
+.hint:hover{filter:brightness(.97)}
+.hint span{color:#4A4450;font-size:13px}
+table.abotable{table-layout:auto;min-width:900px}
+.abotable th>span{display:block;padding:10px}
+.abotable td{padding:0 10px;height:42px;cursor:pointer}
+.abotable td.soon{color:#A93226;font-weight:600}
+.status{font-size:12px;font-weight:600;border-radius:999px;padding:2px 8px}
+.status.on{background:#E7F4EC;color:#1E6B3A}.status.off{background:#EEEAF0;color:#5F5966}
+
+/* Hilfe */
+details.help{background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 18px;scroll-margin-top:16px}
+details.help[open]{border-color:var(--mag)}
+details.help summary{cursor:pointer;font-weight:700;font-size:15px;padding:14px 0;list-style:none;display:flex;align-items:center;gap:10px}
+details.help summary::-webkit-details-marker{display:none}
+details.help summary::before{content:"";width:8px;height:8px;border-right:2px solid var(--mag);border-bottom:2px solid var(--mag);transform:rotate(-45deg);transition:transform .15s;flex-shrink:0}
+details.help[open] summary::before{transform:rotate(45deg)}
+.helpbody{padding:0 0 16px;color:#2E2A33;line-height:1.6}
+.helpbody ul,.helpbody ol{margin:0 0 8px;padding-left:20px}
+.helpbody li{margin:4px 0}
+.helpbody p{margin:0 0 10px}
+.helpbody svg{vertical-align:-3px;color:var(--mag-text)}
+.helpbody .note{background:var(--mag-softer);border-left:3px solid var(--mag);padding:8px 12px;border-radius:0 8px 8px 0}
+kbd{font-family:inherit;font-size:12px;background:#F1EDF3;border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:1px 6px}
+table.keys{border-collapse:collapse;margin:4px 0 12px}
+table.keys td{padding:3px 14px 3px 0}
+
+/* Dialoge */
+.overlay{position:fixed;inset:0;background:rgba(28,26,30,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.dialog{width:100%;max-width:520px;max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.dialog h2{font-size:20px;font-weight:700}
+.dialog .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
+.toast{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:70;max-width:90%}
+.busy{position:fixed;inset:0;background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;z-index:80}
+.busy .in{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 26px;display:flex;gap:14px;align-items:center;box-shadow:0 12px 40px rgba(40,10,30,.12);max-width:420px}
+.spin{width:26px;height:26px;border:3px solid var(--mag-soft);border-top-color:var(--mag);border-radius:50%;animation:sp 0.9s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pwfield{display:flex;gap:6px}
+.pwfield .field{flex:1}
+
+/* Druck */
+#print{display:none}
+@media print{
+  /* Eigene Seitenränder: ersetzen die Kopf-/Fusszeile des Browsers (Titel, Pfad, Datum) und zeigen die Seitenzahl. */
+  @page{size:A4;margin:12mm 15mm 14mm 15mm;
+    @top-left{content:""} @top-center{content:""} @top-right{content:""}
+    @bottom-left{content:"";font-size:8pt;color:#555;font-family:"Segoe UI",system-ui,sans-serif}
+    @bottom-center{content:""}
+    @bottom-right{content:"Seite " counter(page) " von " counter(pages);font-size:8pt;color:#555;font-family:"Segoe UI",system-ui,sans-serif}}
+  html,body{background:#fff;height:auto}
+  #app,.overlay,.toast,.busy{display:none!important}
+  #print{display:block;color:#000;font-size:10pt}
+  .pr-page{page-break-after:always}
+  .pr-pw td{border-bottom:0.5pt solid #ddd}
+  .pr-pw th{text-align:left;font-weight:600;color:#444;padding:1pt 4pt 2pt 0;border-bottom:0.75pt solid #bbb;font-size:9pt}
+  .pr-pw td:first-child{width:auto!important;color:#000!important}
+  .pr-pw tr.pr-hc td{border-bottom:0;padding-bottom:0}
+  .pr-pw tr.pr-cred td{font-size:8.5pt;color:#333;padding-top:0}
+  .pr-pw .mono{font-family:Consolas,"Courier New",monospace}
+  .pr-mono{font-family:Consolas,"Courier New",monospace}
+  .pr-page:last-child{page-break-after:auto}
+  .pr-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--mag);padding-bottom:6pt;margin-bottom:4pt}
+  .pr-head img{height:34pt;width:auto;flex-shrink:0;margin-left:12pt}
+  .pr-head h1{font-size:18pt}
+  .pr-meta{font-size:9pt;color:#555}
+  .pr-addr{font-size:8.5pt;line-height:1.35;color:#333}
+  .pr-title{font-size:18pt;font-weight:700;margin:8pt 0 2pt}
+  .pr-sec{padding:6pt 0 3pt;break-inside:avoid}
+  .pr-sec+.pr-sec{border-top:0.75pt solid #bbb}
+  .pr-sec h2{font-size:11pt;margin:0 0 3pt;color:var(--mag-text)}
+  .pr-sec table{width:100%;border-collapse:collapse}
+  .pr-sec td{padding:1pt 4pt 1pt 0;vertical-align:top;white-space:pre-line}
+  .pr-sec td:first-child{width:30%;color:#444}
+  .pr-notes{white-space:pre-line}
+  .pr-foot{margin-top:10pt;padding-top:6pt;border-top:0.75pt solid #bbb;font-size:8.5pt;color:#555}
+  .pr-key{font-family:Consolas,monospace;font-size:20pt;letter-spacing:1pt;border:1.5pt dashed var(--mag);padding:12pt;text-align:center;margin:14pt 0}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="print"></div>
+
+<script>
+"use strict";
+// Angaben der IT-Firma aus partner.json (null = neutrale App ohne Firmendaten)
+let P = null;
+const DEFAULT_NAME = "Stick[T]resor", DEFAULT_COLOR = "#1F6FB2";
+// Name der App: Buchstaben in [eckigen Klammern] erscheinen in der Akzentfarbe
+function brandOf(name) { return esc(name || DEFAULT_NAME).replace(/\[([^\]]*)\]/g, '<span class="m">$1</span>'); }
+function brand() { return brandOf(P && P.appName); }
+function appTitle() { return String((P && P.appName) || DEFAULT_NAME).replace(/[\[\]]/g, ""); }
+// Neutrales Logo (Schild mit Schlüsselloch) in der Akzentfarbe
+function defaultLogo(color) {
+  const c = color || DEFAULT_COLOR;
+  return "data:image/svg+xml;base64," + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><path d="M60 8 102 24v30c0 28-18 48-42 58C36 102 18 82 18 54V24Z" fill="${c}"/><circle cx="60" cy="52" r="13" fill="#fff"/><path d="M54 60h12l4 26H50Z" fill="#fff"/></svg>`);
+}
+function logo() { return (P && P.logo) || defaultLogo(P && P.color); }
+// Farbschema aus einer Akzentfarbe ableiten (dunklere Töne für Schaltflächen und Text)
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function rgbHex(c) { return "#" + c.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("").toUpperCase(); }
+function mix(h, to, t) { const a = hexRgb(h), b = hexRgb(to); return rgbHex(a.map((v, i) => v + (b[i] - v) * t)); }
+function lum(h) { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; const [r, g, b] = hexRgb(h).map(f); return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+function contrast(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+function darkEnough(h, min) { let t = 0, c = h; while (contrast(c, "#FFFFFF") < min && t < 0.9) { t += 0.04; c = mix(h, "#000000", t); } return c; }
+function themeVars(color) {
+  const c = /^#[0-9A-Fa-f]{6}$/.test(color || "") ? color.toUpperCase() : DEFAULT_COLOR;
+  const btn = darkEnough(mix(c, "#000000", 0.09), 4.5);
+  return { "--mag": c, "--mag-btn": btn, "--mag-btn-h": mix(btn, "#000000", 0.15), "--mag-text": darkEnough(mix(c, "#000000", 0.31), 6),
+    "--mag-deep": darkEnough(mix(c, "#000000", 0.47), 8), "--mag-soft": mix(c, "#FFFFFF", 0.89), "--mag-softer": mix(c, "#FFFFFF", 0.965) };
+}
+function themeStyle(color) { return Object.entries(themeVars(color)).map(([k, v]) => `${k}:${v}`).join(";"); }
+function applyTheme() {
+  const v = themeVars(P && P.color);
+  Object.entries(v).forEach(([k, val]) => document.documentElement.style.setProperty(k, val));
+  document.title = appTitle();
+}
+const hasSupport = p => p && (p.tel || p.mail || p.web || p.helpdesk);
+
+// ---------- Verbindung zur App (Go) ----------
+const api = new Proxy({}, { get: (_, n) => (...a) => {
+  const f = window["api_" + n];
+  if (!f) return Promise.reject("Funktion " + n + " fehlt");
+  return f(...a);
+}});
+const errText = e => (e && e.message) ? e.message : String(e);
+
+// ---------- Hilfen ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const I = {
+  key: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2"/><path d="m16 7 3 3"/><path d="m19 4 2 2"/></svg>',
+  lock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  pc: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>',
+  pcAdd: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M12 7v6"/><path d="M9 10h6"/></svg>',
+  print: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+  copy: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>',
+  gear: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
+  edit: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  plus: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+  folder: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>',
+  home: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9"/><path d="M10 20v-6h4v6"/></svg>',
+  pcBig: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>',
+  keyBig: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2"/><path d="m16 7 3 3"/><path d="m19 4 2 2"/></svg>',
+  pcSmall: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>',
+  help: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>',
+  shield: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+  ext: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M10 14 20 4"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>',
+  repeat: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+  repeatBig: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+  upload: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>',
+  dice: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M12 12h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/></svg>',
+  trash: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+  list: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>'
+};
+
+let S = { status: null, data: null, view: "home", pcId: null, catId: "all", q: "", shown: new Set(), editPc: null, loginMode: "pw", error: "" };
+
+function toast(msg) {
+  let t = $("#toast");
+  if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.textContent = msg; t.classList.remove("hidden");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), 3200);
+}
+function busy(msg) {
+  let b = $("#busy");
+  if (msg === false) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement("div"); b.id = "busy"; b.className = "busy"; document.body.appendChild(b); }
+  b.innerHTML = '<div class="in"><div class="spin"></div><div>' + esc(msg) + '</div></div>';
+}
+async function run(msg, fn) {
+  busy(msg);
+  try { return await fn(); } finally { busy(false); }
+}
+
+// ---------- Ablauf ----------
+async function refresh() {
+  try {
+    S.status = await api.status();
+  } catch (e) { S.status = { state: "error" }; S.error = errText(e); }
+  P = S.status.partner || null;
+  applyTheme();
+  if (S.status.state === "open") {
+    try { S.data = await api.data(); } catch (e) { S.error = errText(e); }
+  } else {
+    S.data = null; S.shown.clear(); S.editPc = null;
+  }
+  render();
+}
+
+function render() {
+  closeDialog(); closePopover();
+  const st = S.status ? S.status.state : "loading";
+  const app = $("#app");
+  if (st === "loading") app.innerHTML = '<div class="center"><div class="spin"></div></div>';
+  else if (st === "new") app.innerHTML = viewNew();
+  else if (st === "locked" || st === "handover-locked") app.innerHTML = viewLogin();
+  else if (st === "setpw") app.innerHTML = viewSetPw();
+  else if (st === "handed-over") app.innerHTML = viewHandedOver();
+  else if (st === "open" && S.data) app.innerHTML = viewMain();
+  else app.innerHTML = '<div class="center"><div class="card"><div class="err">' + esc(S.error || "Unbekannter Fehler") + '</div></div></div>';
+  bind();
+  const f = document.querySelector("[autofocus]"); if (f) f.focus();
+}
+
+// ---------- Bildschirm: neuer Tresor ----------
+function viewNew() {
+  const s = S.status;
+  const foot = `<div class="cardfoot"><span>${esc(s.file)}</span><span>Version ${esc(s.version)}</span></div>`;
+  const ro = s.writable ? "" : '<div class="err">In diesen Ordner kann nicht geschrieben werden. Ist der Stick schreibgeschützt?</div>';
+  if (!P) {
+    return `<div class="center"><div class="card wide">
+      <img class="logo" src="${logo()}" alt="">
+      <div style="text-align:center" class="stack"><div class="brand big">${brand()}</div><div class="muted">PC-Datenblätter, Passwörter und Abos, verschlüsselt auf dem USB-Stick.</div></div>
+      ${ro}
+      <div class="choice">
+        <button class="choicebtn" data-act="new-self"><span class="tic">${I.keyBig}</span><span><b>Selbst verwenden</b><span class="muted">Sie legen gleich Ihr eigenes Master-Passwort fest.</span></span></button>
+        <button class="choicebtn" data-act="partner-edit"><span class="tic">${I.pcBig}</span><span><b>Für Kunden einrichten</b><span class="muted">Für IT-Firmen: Logo, Adresse und Support erfassen, PCs aufnehmen und den Stick dem Kunden übergeben.</span></span></button>
+      </div>
+      ${foot}
+    </div></div>`;
+  }
+  return `<div class="center"><form class="card" id="f-new">
+    <img class="logo" src="${logo()}" alt="">
+    <div style="text-align:center"><h1>Neuen Tresor anlegen</h1><div class="muted">Auf diesem Stick gibt es noch keine Daten.</div></div>
+    ${ro}
+    <div class="hint-mag">Der Tresor wird im <b>Übergabe-Modus</b> angelegt. ${esc(P.firma)} erfasst damit die PCs. Bei der Übergabe legt der Kunde sein eigenes Master-Passwort fest.</div>
+    <div><label class="lbl" for="pw">Übergabe-Passwort</label><input id="pw" class="field" type="password" autocomplete="new-password" autofocus></div>
+    <div><label class="lbl" for="pw2">Übergabe-Passwort wiederholen</label><input id="pw2" class="field" type="password" autocomplete="new-password"></div>
+    <div class="small muted">Frei wählbar, mindestens 6 Zeichen. Es wird nirgends gespeichert und gilt nur, bis Sie «Passwort setzen» drücken.</div>
+    <div id="msg"></div>
+    <button class="btn p" type="submit">Tresor anlegen</button>
+    <div class="row" style="justify-content:center;gap:6px">
+      <button class="btn g" type="button" data-act="partner-edit">${I.edit} Firmenangaben</button>
+      <button class="btn g" type="button" data-act="prepare-stick">${I.upload} Auf USB-Stick kopieren</button>
+    </div>
+    ${foot}
+  </form></div>`;
+}
+
+// ---------- Partner-Angaben (IT-Firma) ----------
+function infoCard(p, preview) {
+  if (!p) return "";
+  const mail = p.mail ? (preview ? `<span class="lnk">${esc(p.mail)}</span>` : `<a href="#" data-act="url" data-id="mailto:${esc(p.mail)}">${esc(p.mail)}</a>`) : "";
+  const web = p.web ? (preview ? `<span class="lnk">${esc(p.web)}</span>` : `<a href="#" data-act="url" data-id="https://${esc(p.web)}">${esc(p.web)}</a>`) : "";
+  const addr = [p.strasse, p.ort].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("");
+  const cont = [p.tel ? `<span>${esc(p.tel)}</span>` : "", mail, web].filter(Boolean).join("");
+  return `<section class="infocard">
+      <div class="eyebrow">${esc(p.supportTitel || "Ihr IT-Partner")}</div>
+      <img src="${p.logo || defaultLogo(p.color)}" alt="" class="homelogo">
+      <div class="infogrid">
+        <div class="stack" style="gap:2px"><b style="font-size:16px">${esc(p.firma || "Firmenname")}</b>${addr}</div>
+        ${cont ? `<div class="stack" style="gap:2px">${cont}</div>` : ""}
+      </div>
+      ${p.helpdesk || p.supportInfo ? `<div class="helpdesk">
+        ${p.helpdesk ? `<div class="eyebrow" style="color:var(--mag-deep)">Helpdesk</div><div class="hdnum">${esc(p.helpdesk)}</div>` : ""}
+        ${p.helpdeskInfo ? `<div class="small" style="color:#4A4450">${esc(p.helpdeskInfo)}</div>` : ""}
+        ${p.supportInfo ? `<div class="small" style="color:#4A4450">${esc(p.supportInfo)}</div>` : ""}
+      </div>` : ""}
+    </section>`;
+}
+function supportLine(p) {
+  if (!p) return "";
+  return [p.firma, p.tel, p.mail, p.helpdesk ? "Helpdesk " + p.helpdesk : ""].filter(Boolean).map(esc).join(" · ");
+}
+const PF = [
+  ["firma", "Firma *", "z.B. Muster Informatik GmbH"], ["strasse", "Strasse", ""], ["ort", "PLZ und Ort", ""],
+  ["tel", "Telefon", ""], ["mail", "E-Mail", ""], ["web", "Webseite", "www.beispiel.ch"],
+  ["supportTitel", "Überschrift der Kontaktkarte", "Ihr IT-Partner"], ["helpdesk", "Helpdesk-Telefon", "z.B. 0900 …"],
+  ["helpdeskInfo", "Helpdesk-Tarif / Hinweis", "z.B. ab Festnetz CHF 2.50/Min."], ["supportInfo", "Weitere Support-Infos", "z.B. Mo–Fr 8–12 und 13.30–17 Uhr"]
+];
+function partnerDialog() {
+  const cur = P ? { ...P } : { appName: "", color: DEFAULT_COLOR, supportTitel: "Ihr IT-Partner" };
+  const fld = ([k, l, ph]) => `<div><label class="lbl" for="pf-${k}">${l}</label><input id="pf-${k}" data-k="${k}" class="field" value="${esc(cur[k] || "")}" placeholder="${esc(ph)}" autocomplete="off"></div>`;
+  dialog(`<h2>Firmenangaben</h2>
+    <div class="small muted" style="margin-top:-6px">Diese Angaben sieht Ihr Kunde in der App und auf jedem Ausdruck. Sie werden in <b>partner.json</b> neben dem Programm und geschützt im Tresor gespeichert.</div>
+    <div class="pfgrid">
+      <form id="pf" class="stack" style="gap:10px">
+        <div class="fgrid">${PF.slice(0, 6).map(fld).join("")}</div>
+        <div class="sep"></div>
+        <div class="fgrid">${PF.slice(6).map(fld).join("")}</div>
+        <div class="sep"></div>
+        <div class="fgrid">
+          <div><label class="lbl" for="pf-appName">Name der App</label><input id="pf-appName" data-k="appName" class="field" value="${esc(cur.appName || "")}" placeholder="${esc(DEFAULT_NAME)}" autocomplete="off">
+            <div class="small muted">Buchstaben in [eckigen Klammern] erscheinen farbig, z.B. <span class="mono">[D]er Passwort[M]anager</span>.</div></div>
+          <div><label class="lbl" for="pf-colorT">Akzentfarbe</label><div class="row" style="gap:8px;flex-wrap:nowrap"><input type="color" id="pf-color" value="${esc(cur.color || DEFAULT_COLOR)}" style="width:48px;height:40px;padding:2px;border:1px solid var(--line2);border-radius:8px;background:#fff"><input id="pf-colorT" class="field mono" value="${esc(cur.color || DEFAULT_COLOR)}" style="width:120px"></div></div>
+          <div><label class="lbl">Logo</label><div class="row" style="gap:8px"><label class="btn" for="pf-logo">${I.upload} Bild wählen …</label><input type="file" id="pf-logo" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none"><button class="btn g" type="button" id="pf-nologo">Entfernen</button></div>
+            <div class="small muted">PNG, JPG oder SVG, am besten quer mit transparentem Hintergrund.</div></div>
+        </div>
+        <div id="dlg-msg"></div>
+      </form>
+      <div class="pfprev"><div class="small muted" style="margin-bottom:6px">Vorschau</div><div id="pf-prev"></div></div>
+    </div>
+    <div class="acts">${P ? '<button class="btn g danger-t" type="button" id="pf-del" style="margin-right:auto">Firmenangaben entfernen</button>' : ""}<button class="btn" data-close>Abbrechen</button><button class="btn p" id="pf-save">Speichern</button></div>`,
+    o => {
+      const prev = () => {
+        o.querySelectorAll("#pf [data-k]").forEach(f => cur[f.dataset.k] = f.value.trim());
+        $("#pf-prev").innerHTML = `<div style="${themeStyle(cur.color)}"><div class="brand big" style="margin-bottom:10px">${brandOf(cur.appName)}</div>${infoCard(cur, true)}<div class="row" style="margin-top:10px"><span class="btn p">${I.key} Schaltfläche</span><span class="chip on">Auswahl</span></div></div>`;
+      };
+      const setColor = v => { if (/^#[0-9A-Fa-f]{6}$/.test(v)) { cur.color = v.toUpperCase(); o.querySelector("#pf-color").value = v; o.querySelector("#pf-colorT").value = v.toUpperCase(); prev(); } };
+      o.querySelector("#pf-color").addEventListener("input", e => setColor(e.target.value));
+      o.querySelector("#pf-colorT").addEventListener("input", e => setColor(e.target.value.trim()));
+      o.querySelectorAll("#pf [data-k]").forEach(f => f.addEventListener("input", prev));
+      o.querySelector("#pf-nologo").addEventListener("click", () => { cur.logo = ""; prev(); });
+      o.querySelector("#pf-logo").addEventListener("change", async e => {
+        const f = e.target.files[0]; if (!f) return;
+        try { cur.logo = await readLogo(f); dlgMsg(""); prev(); } catch (err) { dlgMsg(errText(err)); }
+      });
+      o.querySelector("#pf").addEventListener("submit", ev => ev.preventDefault());
+      o.querySelector("#pf-save").addEventListener("click", async () => {
+        prev();
+        try { await run("Wird gespeichert …", () => api.savePartner(cur)); closeDialog(); toast("Firmenangaben gespeichert."); await refresh(); }
+        catch (err) { dlgMsg(errText(err)); }
+      });
+      const del = o.querySelector("#pf-del");
+      if (del) del.addEventListener("click", async () => {
+        if (!await confirmDlg("Firmenangaben entfernen?", "Die App erscheint danach neutral, ohne Logo, Adresse und Support.", "Entfernen", true)) return;
+        try { await api.removePartner(); toast("Firmenangaben entfernt."); await refresh(); } catch (err) { toast(errText(err)); }
+      });
+      prev();
+    }, "xwide");
+}
+// Logo einlesen: SVG unverändert, Bilder auf höchstens 800×400 Pixel verkleinern
+function readLogo(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onerror = () => rej("Die Datei konnte nicht gelesen werden.");
+    r.onload = () => {
+      const url = r.result;
+      if (file.type === "image/svg+xml") return url.length > 1400000 ? rej("Das Logo ist zu gross (max. 1 MB).") : res(url);
+      const img = new Image();
+      img.onerror = () => rej("Das Bild konnte nicht gelesen werden.");
+      img.onload = () => {
+        const k = Math.min(1, 800 / img.width, 400 / img.height);
+        const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        const out = c.toDataURL("image/png");
+        out.length > 1400000 ? rej("Das Logo ist zu gross.") : res(out);
+      };
+      img.src = url;
+    };
+    r.readAsDataURL(file);
+  });
+}
+async function prepareStick() {
+  try {
+    const r = await run("Wird kopiert …", () => api.prepareStick());
+    if (!r || !r.dir) return;
+    dialog(`<h2>Stick vorbereitet</h2><div style="color:#4A4450"><b>${esc(r.exe)}</b>${P ? " und die Firmenangaben" : ""} wurden kopiert nach<div class="mono small" style="margin-top:6px;overflow-wrap:anywhere">${esc(r.dir)}</div></div>
+      ${r.hasVault ? '<div class="info">Dort liegt bereits ein Tresor (daten.kdbx). Er wurde nicht verändert, nur das Programm wurde ersetzt.</div>' : '<div class="small muted">Starten Sie das Programm auf dem Stick und legen Sie dort den Tresor mit Ihrem Übergabe-Passwort an.</div>'}
+      <div class="acts"><button class="btn p" data-close>OK</button></div>`);
+  } catch (e) { toast(errText(e)); }
+}
+
+// ---------- Bildschirm: übergeben ----------
+function viewHandedOver() {
+  return `<div class="center"><div class="card">
+    <img class="logo" src="${logo()}" alt="">
+    <div style="text-align:center" class="stack"><h1>Übergabe abgeschlossen</h1>
+    <div style="color:#4A4450">Der Stick kann dem Kunden übergeben werden. Beim nächsten Start legt der Kunde sein eigenes Master-Passwort fest und erhält seinen Wiederherstellungsschlüssel.</div></div>
+    <button class="btn p" data-act="quit">App schliessen</button>
+  </div></div>`;
+}
+
+// ---------- Bildschirm: Anmeldung ----------
+function viewLogin() {
+  const s = S.status, ho = s.state === "handover-locked";
+  if (S.loginMode === "rec") {
+    return `<div class="center"><form class="card" id="f-rec">
+      <img class="logo" src="${logo()}" alt="">
+      <div style="text-align:center"><h1>Passwort vergessen</h1><div class="muted">Mit dem ausgedruckten Wiederherstellungsschlüssel</div></div>
+      <div><label class="lbl" for="rk">Wiederherstellungsschlüssel</label><input id="rk" class="field mono" autocomplete="off" placeholder="RK-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" autofocus></div>
+      <div id="msg"></div>
+      <button class="btn p" type="submit">Weiter</button>
+      <div class="cardfoot"><button class="btn g" type="button" data-act="login-pw">Zurück zur Anmeldung</button></div>
+    </form></div>`;
+  }
+  return `<div class="center"><form class="card" id="f-login">
+    <img class="logo" src="${logo()}" alt="">
+    <div style="text-align:center" class="stack"><div class="brand big">${brand()}</div><h1 style="font-size:18px;font-weight:600;color:#4A4450">Tresor entsperren</h1></div>
+    ${ho ? `<div class="hint-mag row" style="align-items:flex-start;flex-wrap:nowrap">${I.key}<div><b>Übergabe-Modus.</b> Anmeldung mit dem Übergabe-Passwort${P ? " von " + esc(P.firma) : ""}. Nur für die Ersterfassung.</div></div>` : ""}
+    <div><label class="lbl" for="pw">${ho ? "Übergabe-Passwort" : "Master-Passwort"}</label><input id="pw" class="field" type="password" autocomplete="off" autofocus></div>
+    <div id="msg"></div>
+    <button class="btn p" type="submit">Entsperren</button>
+    <div class="cardfoot"><span>${esc(s.file)}</span>${s.hasRecovery && !ho ? '<button class="btn g" type="button" data-act="login-rec">Passwort vergessen?</button>' : ""}</div>
+  </form></div>`;
+}
+
+// ---------- Bildschirm: eigenes Passwort festlegen ----------
+function viewSetPw() {
+  const s = S.status, rec = s.recovered;
+  return `<div class="center"><form class="card wide" id="f-setpw">
+    <img src="${logo()}" alt="" style="width:150px">
+    <div class="stack" style="gap:8px">
+      <div class="eyebrow">${rec ? "Wiederherstellung" : "Erster Start"}</div>
+      <h1 style="font-size:24px">${rec ? "Neues Master-Passwort festlegen" : "Legen Sie Ihr eigenes Master-Passwort fest"}</h1>
+      <p style="margin:0;color:#4A4450">${rec
+        ? "Der Wiederherstellungsschlüssel war richtig. Legen Sie jetzt ein neues Master-Passwort fest. Ihr ausgedruckter Schlüssel bleibt gültig."
+        : P ? `${esc(P.firma)} hat Ihre PCs erfasst und den Tresor an Sie übergeben. Ab jetzt haben nur Sie Zugriff. Auch ${esc(P.firma)} kann Ihre Daten nicht mehr öffnen.`
+        : "Mit diesem Passwort öffnen Sie Ihren Tresor. Nur Sie kennen es, niemand sonst kann Ihre Daten öffnen."}</p>
+    </div>
+    <div class="fgrid">
+      <div><label class="lbl" for="np1">Neues Master-Passwort</label><input id="np1" class="field" type="password" autocomplete="new-password" autofocus></div>
+      <div><label class="lbl" for="np2">Passwort wiederholen</label><input id="np2" class="field" type="password" autocomplete="new-password"></div>
+    </div>
+    <div class="stack" style="gap:6px;margin-top:-4px"><div class="meter"><div id="meter"></div></div>
+    <div class="small muted" id="meter-t">Mindestens 6 Zeichen. Tipp: vier oder mehr zufällige Wörter sind leicht zu merken und sicher, z.B. «Tinte-Ferse-Kompass-Ahorn» (nur ein Beispiel).</div></div>
+    ${rec ? "" : `<div class="keybox">
+      <b>Ihr Wiederherstellungsschlüssel</b>
+      <div class="key mono">${esc(s.recoveryKey)}</div>
+      <div class="small" style="color:#4A4450">Drucken Sie diesen Schlüssel aus und bewahren Sie ihn sicher auf, aber nicht zusammen mit dem Stick. Damit kommen Sie an Ihre Daten, falls Sie das Master-Passwort vergessen.</div>
+      <div><button class="btn" type="button" data-act="print-key">${I.print} Schlüssel drucken</button></div>
+    </div>
+    <label class="row" style="flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" id="ck" style="width:18px;height:18px;accent-color:var(--mag-btn);margin-top:1px;flex-shrink:0"> <span>Ich habe den Wiederherstellungsschlüssel ausgedruckt und sicher abgelegt.</span></label>`}
+    <div id="msg"></div>
+    <button class="btn p" type="submit">Passwort festlegen &amp; starten</button>
+  </form></div>`;
+}
+
+// ---------- Passwortbewertung ----------
+// Häufige Wörter und Muster, die Angreifer zuerst ausprobieren
+const COMMON_PW = ["passwort", "password", "kennwort", "pass", "123456", "12345", "1234", "qwertz", "qwerty", "asdf", "yxcv", "admin", "root", "login", "user",
+  "welcome", "willkommen", "hallo", "hello", "letmein", "geheim", "secret", "test", "abc", "iloveyou", "sommer", "winter", "herbst", "fruehling", "frühling",
+  "schweiz", "suisse", "bern", "dragon", "monkey", "master", "000000", "111111", "123123", "654321", "fussball", "football"];
+// rate: Bits der geschätzten Stärke, 0 = leer. Grenzen: < 40 schwach, < 64 mittel, sonst stark.
+function rateBits(pw) {
+  if (!pw) return 0;
+  let pool = 0;
+  if (/[a-z]/.test(pw)) pool += 26; if (/[A-Z]/.test(pw)) pool += 26; if (/[0-9]/.test(pw)) pool += 10; if (/[^A-Za-z0-9]/.test(pw)) pool += 33;
+  // Wiederholungen (aaa) und Folgen (abc, 123) zählen kaum
+  let eff = 1;
+  for (let i = 1; i < pw.length; i++) {
+    const d = pw.charCodeAt(i) - pw.charCodeAt(i - 1);
+    eff += (d === 0 || d === 1 || d === -1) ? 0.25 : 1;
+  }
+  let bits = eff * Math.log2(Math.max(pool, 2));
+  const low = pw.toLowerCase().replace(/[@4]/g, "a").replace(/3/g, "e").replace(/[1!]/g, "i").replace(/0/g, "o").replace(/\$/g, "s");
+  const hits = COMMON_PW.filter(w => low.includes(w) || pw.toLowerCase().includes(w));
+  if (hits.length) bits -= 12 + 4 * Math.max(...hits.map(w => w.length));
+  if (/(19|20)\d\d/.test(pw)) bits -= 6;          // Jahreszahl
+  if (/^[A-Z]?[a-zäöü]+[0-9!?.]{0,3}$/.test(pw)) bits -= 8; // Wort + Ziffer/Zeichen am Ende
+  return Math.max(1, bits);
+}
+function rate(pw) {
+  const b = rateBits(pw);
+  if (!b) return { s: -1, l: "" };
+  return b < 40 ? { s: 0, l: "Schwach" } : b < 64 ? { s: 1, l: "Mittel" } : { s: 2, l: "Stark" };
+}
+function strength(pw) { return Math.min(100, Math.round(rateBits(pw) / 0.8)); }
+function dupCount(pw, ownId) {
+  if (!pw) return 0;
+  const n = S.data.entries.filter(e => e.password === pw && e.id !== ownId).length;
+  return n ? n + 1 : 0;
+}
+function secBadge(pw, id) {
+  const r = rate(pw);
+  if (r.s < 0) return "";
+  const n = dupCount(pw, id);
+  return `<i class="sdot s${r.s}" title="Stärke: ${r.l}"></i>${n ? `<span class="dupn" title="Dasselbe Passwort wird in ${n} Einträgen verwendet">${n}×</span>` : ""}`;
+}
+function secStats() {
+  const es = S.data.entries.filter(e => e.password);
+  const cnt = {}; es.forEach(e => cnt[e.password] = (cnt[e.password] || 0) + 1);
+  return { weak: es.filter(e => rate(e.password).s === 0).length, dup: es.filter(e => cnt[e.password] > 1).length, total: es.length };
+}
+function isWeak(e) { return e.password && rate(e.password).s === 0; }
+function isDup(e) { return e.password && S.data.entries.some(x => x.id !== e.id && x.password === e.password); }
+function updateMeter() {
+  const pw = ($("#np1") || {}).value || "", m = $("#meter"), t = $("#meter-t");
+  if (!m) return;
+  const r = rate(pw);
+  m.style.width = (pw ? Math.max(8, strength(pw)) : 0) + "%";
+  m.style.background = r.s <= 0 ? "#C0392B" : r.s === 1 ? "#D68910" : "#1E8449";
+  if (pw.length) t.textContent = pw.length < 6 ? "Noch zu kurz (mindestens 6 Zeichen)." : r.s === 0 ? "Schwach. Länger machen oder mehrere Wörter verwenden." : r.s === 1 ? "Mittel. Ein paar Zeichen mehr machen es deutlich sicherer." : "Stark.";
+}
+
+// ---------- Hauptfenster ----------
+function curPC() { return S.data.pcs.find(p => p.id === S.pcId) || null; }
+function catName(id) { const c = S.data.categories.find(c => c.id === id); return c ? c.name : ""; }
+
+function viewContent() {
+  switch (S.view) {
+    case "home": return viewHome();
+    case "devices": return viewDevices();
+    case "pc": return viewPC();
+    case "pw": return viewPw();
+    case "help": return viewHelp();
+    case "abos": return viewAbos();
+    default: return viewSettings();
+  }
+}
+function viewMain() {
+  const d = S.data, ho = d.mode === "uebergabe";
+  if (S.view === "pc" && !curPC()) S.view = "devices";
+  const content = viewContent();
+  const tab = (v, label, icon, also) => `<button class="tab ${S.view === v || (also && S.view === also) ? "on" : ""}" data-act="go" data-id="${v}">${icon}<span>${label}</span></button>`;
+
+  return `<div id="main">
+    ${ho ? '<div class="banner"><span>Übergabe-Modus aktiv</span><span>Geräte erfassen, dann «Passwort setzen» drücken.</span></div>' : ""}
+    <header class="top">
+      <button class="logo-btn" data-act="go" data-id="home" aria-label="Startseite"><img src="${logo()}" alt=""><span class="brand">${brand()}</span></button>
+      <nav class="tabs" aria-label="Navigation">
+        ${tab("home", "Start", I.home)}
+        ${tab("devices", "Geräte", I.pc, "pc")}
+        ${tab("pw", "Passwörter", I.key)}
+        ${tab("abos", "Abos", I.repeat)}
+      </nav>
+      <span class="spacer"></span>
+      ${ho ? `<button class="btn p" data-act="handover">${I.key} Passwort setzen</button>` : ""}
+      <button class="btn icon ${S.view === "help" ? "on" : ""}" data-act="go" data-id="help" title="Hilfe" aria-label="Hilfe">${I.help}</button>
+      <button class="btn icon ${S.view === "settings" ? "on" : ""}" data-act="go" data-id="settings" title="Einstellungen" aria-label="Einstellungen">${I.gear}</button>
+      <button class="btn" data-act="lock">${I.lock} Sperren</button>
+    </header>
+    <main class="content" id="content">${content}</main>
+    <footer class="foot">
+      ${P ? `<img src="${logo()}" alt=""><span>${supportLine(P)}</span>` : ""}
+      <span class="spacer"></span>
+      <span>${d.lastSaved ? "Gespeichert um " + esc(d.lastSaved) + " · " : ""}KeePass-Format (KDBX 4) · <span class="brand">${brand()}</span> ${esc(S.status.version)}</span>
+    </footer>
+  </div>`;
+}
+
+// ----- Startseite: Infos zum EDV-Partner -----
+function viewHome() {
+  const d = S.data;
+  return `<div class="home"><div class="brand big" style="font-size:30px">${brand()}</div>
+    ${infoCard(P)}
+    <div class="tiles">
+      <button class="tile" data-act="go" data-id="devices"><span class="tic">${I.pcBig}</span><span><b>Geräte</b><span class="muted">${d.pcs.length} ${d.pcs.length === 1 ? "Gerät" : "Geräte"} erfasst</span></span></button>
+      <button class="tile" data-act="go" data-id="abos"><span class="tic">${I.repeatBig}</span><span><b>Abos</b><span class="muted">${(() => { const n = aboEntries().filter(e => e.abo.status !== "gekündigt").length, sm = aboSums(), h = aboHints().length; return n ? `${n} aktiv · ${sm.map(x => money(x.month, x.cur)).join(" + ")}/Mt.${h ? ` · <span class="warnword">${h} demnächst fällig</span>` : ""}` : "Noch keine Abos"; })()}</span></span></button>
+      <button class="tile" data-act="go" data-id="pw"><span class="tic">${I.keyBig}</span><span><b>Passwörter</b><span class="muted">${d.entries.length} ${d.entries.length === 1 ? "Eintrag" : "Einträge"}${(() => { const st = secStats(); return (st.weak ? ` · <span class="warnword">${st.weak} schwach</span>` : "") + (st.dup ? ` · <span class="warnword">${st.dup} mehrfach</span>` : ""); })()}</span></span></button>
+    </div>
+    <section class="tips">
+      <div class="row" style="gap:10px;align-items:center"><span class="tic small">${I.shield}</span><h2 style="font-size:16px">Sicherheitstipps für gute Passwörter</h2></div>
+      <ul>
+        <li><b>Lang statt kompliziert.</b> Gut zu merken und trotzdem sicher sind <b>vier oder mehr zufällig gewählte Wörter</b>, die nichts miteinander zu tun haben, z.B. <span class="mono">Tinte-Ferse-Kompass-Ahorn</span> (nur ein Beispiel, bitte nicht verwenden). Kein Satz und kein Zitat. Kürzere Passwörter mit 8–12 Zeichen nur, wenn sie zufällig aus Gross- und Kleinbuchstaben, Ziffern und Sonderzeichen gemischt sind. Am einfachsten lassen Sie sie mit dem Würfel ${I.dice} erzeugen.</li>
+        <li><b>Jedes Passwort nur einmal.</b> Wird ein Online-Dienst gehackt, probieren Angreifer die gestohlenen Zugangsdaten automatisch bei E-Mail, Bank und Shops aus. Mit verschiedenen Passwörtern bleibt der Schaden auf ein Konto beschränkt.</li>
+        <li><b>Nichts Persönliches, keine Muster.</b> Keine Namen, Geburtstage, Firmennamen oder Telefonnummern und keine Folgen wie <span class="mono">123456</span>, <span class="mono">qwertz</span> oder <span class="mono">Passwort1</span>.</li>
+        <li><b>Zwei-Faktor-Anmeldung einschalten,</b> wo es geht, besonders bei E-Mail, Microsoft 365 und E-Banking. Dann reicht ein gestohlenes Passwort allein nicht.</li>
+        <li><b>Passwörter nur hier aufbewahren,</b> nicht auf Zetteln oder in E-Mails. Master-Passwort und Wiederherstellungsschlüssel getrennt vom Stick aufbewahren.</li>
+        <li><b>Bei Verdacht sofort ändern,</b> zum Beispiel nach einer verdächtigen E-Mail (Phishing) oder einer Meldung über ein Datenleck. Wir helfen gern.</li>
+      </ul>
+      <div class="small muted">Der Sicherheitscheck unter <a href="#" data-act="go" data-id="pw">Passwörter</a> zeigt schwache und mehrfach verwendete Passwörter.</div>
+    </section>
+  </div>`;
+}
+
+// ----- Geräteliste -----
+function viewDevices() {
+  const d = S.data;
+  const cards = d.pcs.map(p => {
+    const sub = [fieldVal(p, "Hersteller"), fieldVal(p, "Modell")].filter(Boolean).join(" · ");
+    const typ = fieldVal(p, "Gerätetyp"), ort = fieldVal(p, "Standort");
+    return `<button class="devcard" data-act="pc" data-id="${esc(p.id)}">
+      <span class="tic small">${I.pc}</span>
+      <span class="stack" style="gap:2px;min-width:0">
+        <b style="font-size:15px;overflow-wrap:anywhere">${esc(p.name)}</b>
+        <span class="muted" style="overflow-wrap:anywhere">${esc(sub)}</span>
+        <span class="small muted">${esc([typ, ort, fieldVal(p, "Erfasst am") ? "erfasst " + fieldVal(p, "Erfasst am").split(" ")[0] : ""].filter(Boolean).join(" · "))}</span>
+      </span></button>`;
+  }).join("");
+  return `<div class="pagehead"><div class="t"><h1>Geräte</h1><div class="muted">${d.pcs.length} ${d.pcs.length === 1 ? "Gerät" : "Geräte"}</div></div>
+      <div class="row"><button class="btn p" data-act="capture">${I.pcAdd} Diesen PC erfassen</button></div></div>
+    ${d.pcs.length ? `<div class="devgrid">${cards}</div>` : `<div class="list"><div class="emptybox" style="padding:48px 18px">Noch keine Geräte erfasst.<br>Stick in den PC stecken, App starten und «Diesen PC erfassen» drücken.</div></div>`}`;
+}
+
+function fieldVal(pc, key) { const f = pc.fields.find(f => f.key === key); return f ? f.value : ""; }
+
+// ----- PC-Datenblatt -----
+const WIFI_PW = "WLAN-Passwort"; // wird nicht im Datenblatt gespeichert, sondern aus dem Passwort-Eintrag gelesen
+function knownKeys() { const k = new Set(["Erfasst am"]); S.data.sections.forEach(s => s.keys.forEach(x => k.add(x))); return k; }
+function wifiEntry(pc) {
+  const ssid = fieldVal(pc, "WLAN-Name"); if (!ssid) return null;
+  return S.data.entries.find(e => e.title.toLowerCase() === ("wlan " + ssid).toLowerCase()) || S.data.entries.find(e => e.userName === ssid && /^wlan/i.test(e.title)) || null;
+}
+function isCust(k) { return (S.data.customerKeys || []).includes(k); }
+
+function viewPC() {
+  const pc = curPC();
+  if (!pc) return viewDevices();
+  if (S.editPc && S.editPc.id === pc.id) return viewPCEdit();
+  const secs = S.data.sections, known = knownKeys();
+  const box = sec => {
+    const rows = sec.keys.map(k => {
+      if (k === WIFI_PW) {
+        const e = wifiEntry(pc); if (!e || !e.password) return "";
+        const vis = S.shown.has(e.id);
+        return `<div class="kv"><span class="k">${k}</span><span class="v row" style="gap:4px;flex-wrap:wrap"><span class="mono">${e.password ? (vis ? esc(e.password) : "••••••••••") : '<span class="muted">nicht ausgelesen</span>'}</span>
+          ${e.password ? `<button class="btn g" data-act="pw-show" data-id="${esc(e.id)}">${vis ? "Verbergen" : "Anzeigen"}</button><button class="btn g" data-act="pw-copy" data-id="${esc(e.id)}">${I.copy} Kopieren</button>` : `<button class="btn g" data-act="entry-edit" data-id="${esc(e.id)}">Ergänzen</button>`}</span></div>`;
+      }
+      const v = fieldVal(pc, k);
+      return v ? kvRow(k, v) : "";
+    }).join("");
+    return rows ? `<section class="box"><h2>${esc(sec.title)}</h2>${rows}</section>` : "";
+  };
+  const col = c => secs.filter(s => s.column === c).map(box).join("");
+  const other = pc.fields.filter(f => !known.has(f.key) && f.value);
+  const linked = S.data.entries.filter(e => hasDev(e, pc.name));
+  return `<div><button class="btn g" data-act="go" data-id="devices">← Alle Geräte</button></div>
+    <div class="pagehead"><div class="t"><div class="small muted">PC-Datenblatt${fieldVal(pc, "Erfasst am") ? " · erfasst am " + esc(fieldVal(pc, "Erfasst am")) : ""}</div>
+      <h1>${esc(pc.name)}</h1><div style="color:#4A4450">${esc([fieldVal(pc, "Hersteller"), fieldVal(pc, "Modell")].filter(Boolean).join(" · "))}</div></div>
+      <div class="row"><button class="btn" data-act="entry-new-pc">${I.plus} Passwort</button><button class="btn" data-act="pc-edit">${I.edit} Bearbeiten</button><button class="btn" data-act="pc-print">${I.print} Drucken / PDF</button></div></div>
+    <div class="sheet"><div class="sheetcol">${col("left")}</div><div class="sheetcol">${col("right")}
+      ${other.length ? `<section class="box"><h2>Weitere Felder</h2>${other.map(f => kvRow(f.key, f.value)).join("")}</section>` : ""}</div></div>
+    ${pc.notes ? `<section class="box"><h2>Notizen</h2><div class="kv multi"><span class="v">${esc(pc.notes)}</span></div></section>` : ""}
+    ${linked.length ? `<section class="box"><h2>Zugehörige Passwörter <span style="color:#555;font-weight:400;font-size:9pt">· vertraulich aufbewahren</span></h2>
+      ${linked.length ? linked.map(e => `<div class="kv"><span class="k">${esc(e.title)}</span><span class="v row" style="gap:4px;flex-wrap:wrap"><span>${esc(e.userName || "–")}</span><span class="spacer"></span>
+        ${e.password ? `<button class="btn g" data-act="pw-copy" data-id="${esc(e.id)}">${I.copy} Passwort</button>` : ""}<button class="btn g" data-act="entry-edit" data-id="${esc(e.id)}" aria-label="Bearbeiten">${I.edit}</button></span></div>`).join("")
+        : ""}
+    </section>` : ""}`;
+}
+function kvRow(k, v, multi, empty) {
+  return `<div class="kv ${multi ? "multi" : ""}"><span class="k">${esc(k)}</span><span class="v${empty ? " muted" : ""}">${esc(v)}</span></div>`;
+}
+
+function viewPCEdit() {
+  const e = S.editPc, secs = S.data.sections, known = knownKeys();
+  const inp = (k, v, multi) => `<div class="kv edit"><label class="k" for="f-${esc(k)}">${esc(k)}</label>${multi || v.indexOf("\n") >= 0 || v.length > 55
+      ? `<textarea class="field" id="f-${esc(k)}" data-key="${esc(k)}" rows="${Math.min(12, Math.max(2, v.split("\n").length, Math.ceil(v.length / 55)))}">${esc(v)}</textarea>`
+      : `<input class="field" id="f-${esc(k)}" data-key="${esc(k)}" value="${esc(v)}">`}</div>`;
+  const box = sec => `<section class="box"><h2>${esc(sec.title)}</h2>${sec.keys.filter(k => k !== WIFI_PW).map(k => inp(k, val(e, k), sec.multline)).join("")}</section>`;
+  const col = c => secs.filter(s => s.column === c).map(box).join("");
+  const other = e.fields.filter(f => !known.has(f.key));
+  return `<div class="pagehead"><div class="t"><div class="small muted">Datenblatt bearbeiten</div><h1>${esc(e.name)}</h1></div>
+      <div class="row"><button class="btn danger" data-act="pc-delete">Gerät löschen</button><button class="btn" data-act="pc-cancel">Abbrechen</button><button class="btn p" data-act="pc-save">Speichern</button></div></div>
+    <div id="msg"></div>
+    <section class="box accent"><div class="kv edit"><label class="k" for="pc-name">PC-Name</label><input class="field" id="pc-name" value="${esc(e.name)}"></div></section>
+    <div class="sheet"><div class="sheetcol">${col("left")}</div><div class="sheetcol">${col("right")}
+      <section class="box"><div class="row"><h2>Eigene Felder</h2><span class="small muted">z.B. Inventarnummer, Lieferant</span></div>
+        <div id="own" class="stack" style="gap:8px">${other.map(f => ownRow(f.key, f.value)).join("")}</div>
+        <div><button class="btn g" data-act="own-add">${I.plus} Feld hinzufügen</button></div></section></div></div>
+    <section class="box"><h2>Notizen</h2><textarea class="field" id="pc-notes" rows="5" placeholder="Software-Lizenzen, Besonderheiten, Ansprechpartner …">${esc(e.notes)}</textarea></section>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-act="pc-cancel">Abbrechen</button><button class="btn p" data-act="pc-save">Speichern</button></div>`;
+}
+function val(pc, k) { const f = pc.fields.find(f => f.key === k); return f ? f.value : ""; }
+function ownRow(k, v) {
+  return `<div class="row own" style="flex-wrap:nowrap"><input class="field own-k" placeholder="Feldname" value="${esc(k)}" style="flex:0 1 200px" aria-label="Feldname"><input class="field own-v" placeholder="Wert" value="${esc(v)}" style="flex:1" aria-label="Wert"><button class="btn g" data-act="own-del" aria-label="Feld entfernen">✕</button></div>`;
+}
+function collectPCEdit() {
+  const e = S.editPc;
+  const fields = [], seen = new Set();
+  document.querySelectorAll("#content [data-key]").forEach(el => {
+    const k = el.dataset.key, v = el.value.trim();
+    if (v && !seen.has(k)) { fields.push({ key: k, value: v }); seen.add(k); }
+  });
+  const ce = e.fields.find(f => f.key === "Erfasst am"); if (ce) { fields.push(ce); seen.add(ce.key); }
+  let bad = "";
+  document.querySelectorAll("#own .own").forEach(r => {
+    const k = r.querySelector(".own-k").value.trim(), v = r.querySelector(".own-v").value;
+    if (!k && !v.trim()) return;
+    if (!k) { bad = "Bitte jedem eigenen Feld einen Namen geben."; return; }
+    if (seen.has(k) || knownKeys().has(k) || ["Title", "UserName", "Password", "URL", "Notes", "Notizen", "PC-Name", WIFI_PW].includes(k)) { bad = "Der Feldname «" + k + "» ist schon vergeben."; return; }
+    seen.add(k); fields.push({ key: k, value: v });
+  });
+  if (bad) throw bad;
+  return { id: e.id, name: $("#pc-name").value.trim(), notes: $("#pc-notes").value, fields };
+}
+
+// ----- Passwörter: Tabelle wie in Excel -----
+const GCOLS = [
+  { k: "title", l: "Bezeichnung", w: "16%" },
+  { k: "userName", l: "Benutzer", w: "14%" },
+  { k: "password", l: "Passwort", w: "18%" },
+  { k: "url", l: "URL", w: "15%" },
+  { k: "notes", l: "Notizen", w: "" },
+  { k: "cat", l: "Kategorie · Geräte", w: "19%" }
+];
+// Mit Abos braucht die letzte Spalte Platz für das Abzeichen
+const ABO_W = { title: "15%", userName: "13%", password: "17%", url: "14%", cat: "16%" };
+const pendingSaves = new Set();
+function gridCols() { return GCOLS; }
+function defaultCatId() {
+  const d = S.data;
+  if (S.catId !== "all" && d.categories.some(c => c.id === S.catId)) return S.catId;
+  const c = d.categories.find(c => !c.root) || d.categories[0];
+  return c ? c.id : "";
+}
+// alle bekannten Geräte: erfasste PCs plus Namen, die in Einträgen vorkommen
+function allDevices() {
+  const m = new Map();
+  S.data.pcs.forEach(p => m.set(p.name.toLowerCase(), p.name));
+  S.data.entries.forEach(e => (e.devices || []).forEach(d => { if (!m.has(d.toLowerCase())) m.set(d.toLowerCase(), d); }));
+  return [...m.values()].sort((a, b) => a.localeCompare(b, "de"));
+}
+function hasDev(e, d) { return (e.devices || []).some(x => x.toLowerCase() === d.toLowerCase()); }
+function catLabel(catId, devs) {
+  const c = catName(catId) || "–";
+  return `<span class="catname">${esc(c)}</span>${(devs || []).map(d => `<span class="devtag">${I.pcSmall}${esc(d)}</span>`).join("")}`;
+}
+function viewPw() {
+  const d = S.data, q = S.q.trim().toLowerCase();
+  if (S.devF && !allDevices().some(x => x.toLowerCase() === S.devF.toLowerCase())) S.devF = "";
+  let list = d.entries;
+  if (q) list = list.filter(e => [e.title, e.userName, e.url, e.notes, (e.devices || []).join(" "), catName(e.categoryId)].join(" ").toLowerCase().includes(q));
+  else {
+    if (S.catId !== "all") list = list.filter(e => e.categoryId === S.catId);
+    if (S.devF) list = list.filter(e => hasDev(e, S.devF));
+  }
+  if (S.secF === "weak") list = list.filter(isWeak);
+  if (S.secF === "dup") list = list.filter(isDup);
+  const sk = (S.sort && S.sort.k) || "title", sd = (S.sort && S.sort.dir) || 1;
+  const sv = e => (sk === "cat" ? catName(e.categoryId) + " " + (e.devices || []).join(" ") : sk === "password" ? String(e.password ? rate(e.password).s + (isDup(e) ? 0 : 0.5) : 9) : (e[sk] || "")).toLowerCase();
+  list = list.slice().sort((a, b) => sd * sv(a).localeCompare(sv(b), "de") || a.title.localeCompare(b.title, "de"));
+  const chip = (id, name, n) => `<button class="chip ${!q && S.catId === id ? "on" : ""}" data-act="cat" data-id="${esc(id)}">${esc(name)} <span data-count="${esc(id)}">${n}</span></button>`;
+  const devs = allDevices();
+  const dchip = (name, label, n) => `<button class="chip ${!q && (S.devF || "") === name ? "on" : ""}" data-act="devf" data-id="${esc(name)}">${name ? I.pcSmall : ""}${esc(label)} <span>${n}</span></button>`;
+  const cols = gridCols();
+  const hasAbo = d.entries.some(x => x.abo && x.abo.active);
+  return `<div class="pagehead"><div class="t"><h1>Passwörter</h1></div>
+      <div class="row"><button class="btn" data-act="import">${I.upload} Importieren</button><button class="btn p" data-act="row-add">${I.plus} Neue Zeile</button></div></div>
+    <div class="chips"><span class="chiplabel">Kategorie</span>${chip("all", "Alle", d.entries.length)}${d.categories.filter(c => !c.root || c.count || S.catId === c.id).map(c => chip(c.id, c.name, c.count)).join("")}
+      <button class="chip add" data-act="cat-manage">${I.edit} Kategorien bearbeiten</button></div>
+    ${devs.length ? `<div class="chips"><span class="chiplabel">Gerät</span>${dchip("", "Alle Geräte", d.entries.length)}${devs.map(n => dchip(n, n, d.entries.filter(e => hasDev(e, n)).length)).join("")}</div>` : ""}
+    <div class="row" style="justify-content:space-between">
+      <div style="flex:1 1 300px;max-width:440px"><input id="search" class="field" type="search" placeholder="Alle Passwörter durchsuchen …" aria-label="Passwörter durchsuchen" value="${esc(S.q)}"></div>
+      ${secCheck()}
+    </div>
+    <div class="gridwrap"><table class="grid" id="grid">
+      <colgroup>${cols.map(c => `<col${c.w ? ` style="width:${hasAbo ? (ABO_W[c.k] || c.w) : c.w}"` : ""}>`).join("")}<col style="width:${hasAbo ? 180 : 100}px"></colgroup>
+      <thead><tr>${cols.map(c => `<th><button data-act="sort" data-id="${c.k}">${c.l}${sk === c.k ? (sd > 0 ? " ▲" : " ▼") : ""}</button></th>`).join("")}<th></th></tr></thead>
+      <tbody id="gbody">${list.map(gridRow).join("")}</tbody>
+    </table>
+    ${list.length ? "" : `<div class="emptybox" id="gempty">${q ? "Keine Treffer." : "Keine Einträge. Mit «+ Neue Zeile» anfangen oder eine Liste importieren."}</div>`}
+    </div>
+    <div class="row small muted" style="justify-content:space-between">
+      <button class="btn g" data-act="row-add">${I.plus} Neue Zeile</button>
+      <span>Tab: nächste Zelle · Enter: Zeile darunter · Esc: Änderung verwerfen · Änderungen werden automatisch gespeichert</span>
+    </div>`;
+}
+// Zelle mit kleinen Knöpfen rechts (erscheinen beim Darüberfahren bzw. in der aktiven Zeile)
+function toolCell(k, v, btns) {
+  return `<td class="toolcell"><input class="cell" data-k="${k}" value="${esc(v)}" data-orig="${esc(v)}" aria-label="${k}" spellcheck="false" autocomplete="off">
+    <span class="pwtools"><span class="cbtns">${btns.map(([a, ic, t]) => `<button class="cbtn" tabindex="-1" data-gact="${a}" title="${t}" aria-label="${t}">${ic}</button>`).join("")}</span></span></td>`;
+}
+// Adresse für den Browser vervollständigen (192.168.1.1 → http://…, galaxus.ch → https://…)
+function fullURL(u) {
+  u = String(u || "").trim();
+  if (!u) return "";
+  if (/^(https?:\/\/|mailto:)/i.test(u)) return u;
+  if (/^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(u)) return "mailto:" + u;
+  if (/^(\d{1,3}\.){3}\d{1,3}(:\d+)?(\/.*)?$/.test(u) || /^(localhost|[\w-]+)(:\d+)?(\/.*)?$/.test(u)) return "http://" + u;
+  return "https://" + u;
+}
+function gridRow(e) {
+  const cell = (k, v, extra) => `<td><input class="cell ${extra || ""}" data-k="${k}" value="${esc(v)}" data-orig="${esc(v)}" aria-label="${k}" spellcheck="false" autocomplete="off"></td>`;
+  const cat = e.categoryId || defaultCatId(), devs = e.devices || (S.devF ? [S.devF] : []);
+  return `<tr data-id="${esc(e.id || "")}" data-cat="${esc(cat)}" data-devs="${esc(JSON.stringify(devs))}">
+    <td class="titlecell"><input class="cell" data-k="title" value="${esc(e.title || "")}" data-orig="${esc(e.title || "")}" aria-label="title" spellcheck="false" autocomplete="off"></td>${toolCell("userName", e.userName || "", [["copyuser", I.copy, "Benutzername kopieren"]])}
+    <td class="pwcell"><input class="cell mono" type="password" data-k="password" value="${esc(e.password || "")}" data-orig="${esc(e.password || "")}" aria-label="Passwort" spellcheck="false" autocomplete="new-password">
+      <span class="pwtools"><span class="cbtns"><button class="cbtn" tabindex="-1" data-gact="copy" title="Passwort kopieren" aria-label="Passwort kopieren">${I.copy}</button><button class="cbtn" tabindex="-1" data-gact="gen" title="Sicheres Passwort erzeugen" aria-label="Passwort erzeugen">${I.dice}</button></span><span class="pwsec">${secBadge(e.password || "", e.id || "")}</span></span></td>
+    ${toolCell("url", e.url || "", [["copyurl", I.copy, "Link kopieren"], ["openurl", I.ext, "Link im Browser öffnen"]])}${cell("notes", e.notes || "")}
+    <td><button class="cell catbtn" data-gact="cat" aria-label="Kategorie und Geräte wählen">${catLabel(cat, devs)}</button></td>
+    <td class="racts">${e.abo && e.abo.active ? aboBadge(e.abo) : `<button class="cbtn" tabindex="-1" data-gact="abo" title="Als Abo erfassen" aria-label="Abo">${I.repeat}</button>`}<button class="cbtn" tabindex="-1" data-gact="details" title="Details" aria-label="Details">${I.edit}</button><button class="cbtn" tabindex="-1" data-gact="del" title="Löschen" aria-label="Löschen">${I.trash}</button></td>
+  </tr>`;
+}
+// Auswahlfenster für Kategorie und Geräte einer Zeile
+function catPopover(tr, btn) {
+  closePopover();
+  const devsAll = allDevices(), cur = JSON.parse(tr.dataset.devs || "[]");
+  const pop = document.createElement("div");
+  pop.className = "popover"; pop.id = "pop";
+  pop.innerHTML = `<label class="lbl" for="pop-cat">Kategorie</label>
+    <select id="pop-cat" class="field" style="height:38px">${S.data.categories.map(c => `<option value="${esc(c.id)}" ${c.id === tr.dataset.cat ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
+    <div class="lbl" style="margin:12px 0 4px">Gehört zu Gerät${devsAll.length ? "en" : ""}</div>
+    <div class="devlist">${devsAll.length ? devsAll.map(d => `<label class="devopt"><input type="checkbox" value="${esc(d)}" ${cur.some(x => x.toLowerCase() === d.toLowerCase()) ? "checked" : ""}> ${I.pcSmall} ${esc(d)}</label>`).join("") : '<div class="small muted">Noch keine Geräte erfasst.</div>'}</div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn p" id="pop-ok">Fertig</button></div>`;
+  document.body.appendChild(pop);
+  const r = btn.getBoundingClientRect();
+  const left = Math.min(r.left, window.innerWidth - pop.offsetWidth - 12);
+  let top = r.bottom + 4; if (top + pop.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - pop.offsetHeight - 4);
+  pop.style.left = Math.max(8, left) + "px"; pop.style.top = top + "px";
+  const apply = () => {
+    tr.dataset.cat = pop.querySelector("#pop-cat").value;
+    tr.dataset.devs = JSON.stringify([...pop.querySelectorAll(".devopt input:checked")].map(i => i.value));
+    btn.innerHTML = catLabel(tr.dataset.cat, JSON.parse(tr.dataset.devs));
+    tr.dataset.dirty = "1";
+  };
+  pop.addEventListener("change", apply);
+  const done = () => { closePopover(); saveRow(tr); btn.focus(); };
+  pop.querySelector("#pop-ok").addEventListener("click", done);
+  pop.addEventListener("keydown", ev => { if (ev.key === "Escape") { ev.stopPropagation(); done(); } });
+  setTimeout(() => document.addEventListener("mousedown", closePopover._out = ev => { if (!pop.contains(ev.target)) done(); }), 0);
+  pop.querySelector("#pop-cat").focus();
+}
+function closePopover() {
+  const p = $("#pop"); if (p) p.remove();
+  if (closePopover._out) { document.removeEventListener("mousedown", closePopover._out); closePopover._out = null; }
+}
+function rowVals(tr) {
+  const v = { id: tr.dataset.id || "", categoryId: tr.dataset.cat, devices: JSON.parse(tr.dataset.devs || "[]"), modified: "" };
+  tr.querySelectorAll("[data-k]").forEach(el => { v[el.dataset.k] = el.value; });
+  return v;
+}
+function hostOf(u) { return String(u || "").trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "").split(/[\/?#:]/)[0]; }
+function saveRow(tr) {
+  if (!tr || tr.dataset.dirty !== "1" || tr.dataset.saving) return Promise.resolve();
+  const v = rowVals(tr);
+  if (!v.id && !["title", "userName", "password", "url", "notes"].some(k => (v[k] || "").trim())) {
+    if (!tr.contains(document.activeElement)) tr.remove();
+    return Promise.resolve();
+  }
+  if (!v.title.trim()) { v.title = hostOf(v.url) || v.userName.trim() || "Ohne Bezeichnung"; tr.querySelector('[data-k="title"]').value = v.title; }
+  tr.dataset.dirty = ""; tr.dataset.saving = "1"; tr.classList.add("saving"); tr.classList.remove("rowerr");
+  const p = (async () => {
+    try {
+      const r = await api.saveEntry(v);
+      tr.dataset.id = r.id; S.data = r.data;
+      tr.querySelectorAll("[data-k]").forEach(el => { if (tr.dataset.dirty !== "1") el.dataset.orig = el.value; });
+      updateCounts(); refreshSec();
+      tr.classList.add("saved"); setTimeout(() => tr.classList.remove("saved"), 900);
+    } catch (e) { tr.dataset.dirty = "1"; tr.classList.add("rowerr"); toast(errText(e)); }
+    finally {
+      delete tr.dataset.saving; tr.classList.remove("saving");
+      if (tr.dataset.dirty === "1" && !tr.contains(document.activeElement) && !tr.classList.contains("rowerr")) saveRow(tr);
+    }
+  })();
+  pendingSaves.add(p); p.finally(() => pendingSaves.delete(p));
+  return p;
+}
+async function settleGrid() {
+  const rows = document.querySelectorAll("#gbody tr");
+  rows.forEach(tr => saveRow(tr));
+  while (pendingSaves.size) await Promise.all([...pendingSaves]);
+}
+function refreshSec() {
+  document.querySelectorAll("#gbody tr").forEach(tr => {
+    const pw = tr.querySelector('[data-k="password"]'); if (pw) tr.querySelector(".pwsec").innerHTML = secBadge(pw.value, tr.dataset.id);
+  });
+  const sc = $("#seccheck"); if (sc) sc.outerHTML = secCheck();
+  const n = $("#seccheck"); if (n) bindActs(n);
+}
+function secCheck() {
+  const st = secStats();
+  if (!st.total) return '<div id="seccheck"></div>';
+  const chip = (k, label, n) => `<button class="chip sec-chip ${S.secF === k ? "on" : ""}" data-act="secf" data-id="${k}">${label} <span>${n}</span></button>`;
+  return `<div id="seccheck" class="row" style="gap:8px"><span class="chiplabel">Sicherheitscheck</span>
+    ${st.weak || st.dup ? (st.weak ? chip("weak", '<i class="dot s0"></i>Schwach', st.weak) : "") + (st.dup ? chip("dup", '<i class="dot dupdot"></i>Mehrfach verwendet', st.dup) : "")
+      + (S.secF ? `<button class="chip" data-act="secf" data-id="">Filter aufheben</button>` : "")
+      : '<span class="secok">✓ Alle Passwörter in Ordnung</span>'}</div>`;
+}
+function updateCounts() {
+  const d = S.data;
+  const all = document.querySelector('[data-count="all"]'); if (all) all.textContent = d.entries.length;
+  d.categories.forEach(c => { const el = document.querySelector(`[data-count="${CSS.escape(c.id)}"]`); if (el) el.textContent = c.count; });
+}
+function addRow(focusKey) {
+  const tb = $("#gbody"); if (!tb) return;
+  const ge = $("#gempty"); if (ge) ge.remove();
+  const w = document.createElement("tbody"); w.innerHTML = gridRow({ id: "", categoryId: defaultCatId() });
+  const tr = w.firstElementChild; tb.appendChild(tr);
+  const f = tr.querySelector(`[data-k="${focusKey || "title"}"]`); f.focus();
+  tr.scrollIntoView({ block: "nearest" });
+  return tr;
+}
+function moveFocus(cell, dRow) {
+  const tr = cell.closest("tr"), k = cell.dataset.k;
+  let target = dRow > 0 ? tr.nextElementSibling : tr.previousElementSibling;
+  if (!target && dRow > 0) { addRow(k); return; }
+  if (target) { const t = target.querySelector(`[data-k="${k}"]`); if (t) { t.focus(); if (t.select) t.select(); } }
+}
+function bindGrid() {
+  const tb = $("#gbody"); if (!tb) return;
+  tb.addEventListener("input", ev => {
+    const tr = ev.target.closest("tr"); if (!tr) return;
+    tr.dataset.dirty = "1";
+    if (ev.target.dataset.k === "password") tr.querySelector(".pwsec").innerHTML = secBadge(ev.target.value, tr.dataset.id);
+  });
+  tb.addEventListener("change", ev => { const tr = ev.target.closest("tr"); if (tr) tr.dataset.dirty = "1"; });
+  tb.addEventListener("focusin", ev => {
+    const el = ev.target; if (el.dataset.k === "password") el.type = "text";
+    const tr = el.closest("tr"); tb.querySelectorAll("tr.active").forEach(r => r !== tr && r.classList.remove("active")); tr.classList.add("active");
+  });
+  tb.addEventListener("focusout", ev => {
+    const el = ev.target; if (el.dataset.k === "password") el.type = "password";
+    const tr = el.closest("tr");
+    setTimeout(() => { if (tr.isConnected && !tr.contains(document.activeElement)) { tr.classList.remove("active"); saveRow(tr); } }, 0);
+  });
+  tb.addEventListener("keydown", ev => {
+    const el = ev.target; if (!el.dataset || !el.dataset.k) return;
+    if (ev.key === "Enter") { ev.preventDefault(); moveFocus(el, ev.shiftKey ? -1 : 1); }
+    else if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); el.value = el.dataset.orig || ""; const tr = el.closest("tr"); if ([...tr.querySelectorAll("[data-k]")].every(x => x.value === (x.dataset.orig || ""))) tr.dataset.dirty = ""; }
+    else if ((ev.key === "ArrowDown" || ev.key === "ArrowUp") && el.tagName === "INPUT" && !el.list) { ev.preventDefault(); moveFocus(el, ev.key === "ArrowDown" ? 1 : -1); }
+  });
+  tb.addEventListener("paste", ev => {
+    const t = (ev.clipboardData || window.clipboardData).getData("text");
+    if (t && (t.includes("\t") || t.trim().includes("\n"))) { ev.preventDefault(); importDialog(t); }
+  });
+  tb.addEventListener("mousedown", ev => { if (ev.target.closest(".cbtn")) ev.preventDefault(); }); // Fokus in der Zelle lassen
+  tb.addEventListener("click", async ev => {
+    const cb = ev.target.closest(".catbtn"); if (cb) { catPopover(cb.closest("tr"), cb); return; }
+    const b = ev.target.closest(".cbtn"); if (!b) return;
+    const tr = b.closest("tr"), pw = tr.querySelector('[data-k="password"]');
+    try {
+      switch (b.dataset.gact) {
+        case "copy": if (pw.value) { await api.copy(pw.value); toast("Passwort kopiert. Die Zwischenablage wird in 30 Sekunden geleert."); } return;
+        case "copyuser": { const v = tr.querySelector('[data-k="userName"]').value; if (v) { await api.copy(v); toast("Benutzername kopiert."); } return; }
+        case "copyurl": { const v = tr.querySelector('[data-k="url"]').value; if (v) { await api.copy(v); toast("Link kopiert."); } return; }
+        case "openurl": { const v = fullURL(tr.querySelector('[data-k="url"]').value); if (v) await api.openURL(v); return; }
+        case "gen":
+          if (pw.value && !await confirmDlg("Neues Passwort erzeugen?", "Das bisherige Passwort in dieser Zeile wird ersetzt.", "Ersetzen")) return;
+          pw.value = genPassword(20, true); tr.dataset.dirty = "1"; pw.focus(); pw.select(); return;
+        case "abo": {
+          tr.dataset.dirty === "1" && await saveRow(tr); await settleGrid();
+          if (!tr.dataset.id) { toast("Bitte zuerst eine Bezeichnung eingeben."); return; }
+          const en = S.data.entries.find(e => e.id === tr.dataset.id);
+          return aboDialog(en, false);
+        }
+        case "details": {
+          tr.dataset.dirty === "1" && await saveRow(tr); await settleGrid();
+          if (!tr.dataset.id) return;
+          return entryDialog(S.data.entries.find(e => e.id === tr.dataset.id));
+        }
+        case "del": {
+          if (!tr.dataset.id) { tr.remove(); return; }
+          await settleGrid();
+          const old = S.data.entries.find(e => e.id === tr.dataset.id);
+          S.data = await api.deleteEntry(tr.dataset.id); tr.remove(); updateCounts();
+          return toastAction("«" + old.title + "» gelöscht.", "Rückgängig", async () => {
+            const r = await api.saveEntry(Object.assign({}, old, { id: "" })); S.data = r.data; rerenderContent(); toast("Wiederhergestellt.");
+          });
+        }
+      }
+    } catch (e) { toast(errText(e)); }
+  });
+}
+function toastAction(msg, label, fn) {
+  let t = $("#toast");
+  if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.innerHTML = `${esc(msg)} <button class="btn g" style="color:#fff;margin-left:8px;min-height:28px;text-decoration:underline">${esc(label)}</button>`;
+  t.classList.remove("hidden");
+  t.querySelector("button").addEventListener("click", () => { t.classList.add("hidden"); fn().catch(e => toast(errText(e))); });
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), 7000);
+}
+
+// ----- Import aus Excel oder CSV -----
+const IMPORT_FIELDS = [
+  ["", "– ignorieren –"], ["title", "Bezeichnung"], ["userName", "Benutzer"], ["password", "Passwort"],
+  ["url", "URL"], ["pc", "Gerät"], ["notes", "Notizen"], ["category", "Kategorie"]
+];
+const IMPORT_SYN = {
+  title: ["name", "title", "titel", "bezeichnung", "eintrag", "konto", "account", "dienst", "service", "beschreibung"],
+  userName: ["username", "user", "user name", "benutzer", "benutzername", "login", "login_username", "email", "e-mail", "mail", "anmeldename", "loginname"],
+  password: ["password", "passwort", "kennwort", "pw", "login_password", "pass", "pwd"],
+  url: ["url", "login_uri", "website", "webseite", "web site", "adresse", "link", "uri", "homepage", "web"],
+  notes: ["notes", "note", "notizen", "notiz", "bemerkung", "bemerkungen", "kommentar", "comments", "extra"],
+  pc: ["gerät", "geraet", "pc", "computer", "device", "rechner"],
+  category: ["group", "gruppe", "folder", "ordner", "kategorie", "category", "grouping"]
+};
+function parseTable(text) {
+  text = text.replace(/^﻿/, "").replace(/\r\n?/g, "\n");
+  const first = text.split("\n").find(l => l.trim()) || "";
+  const delim = first.includes("\t") ? "\t" : (first.split(";").length > first.split(",").length ? ";" : ",");
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else if (c === '"' && cur === "") q = true;
+    else if (c === delim) { row.push(cur); cur = ""; }
+    else if (c === "\n") { row.push(cur); rows.push(row); row = []; cur = ""; }
+    else cur += c;
+  }
+  if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim()));
+}
+function guessMapping(rows) {
+  const head = (rows[0] || []).map(h => h.trim().toLowerCase().replace(/^"|"$/g, ""));
+  const map = head.map(h => { for (const [f, syn] of Object.entries(IMPORT_SYN)) if (syn.includes(h)) return f; return ""; });
+  const hits = map.filter(Boolean).length;
+  if (hits >= 2 || (hits === 1 && head.length === 1)) {
+    // jedes Feld nur einmal
+    const used = new Set(); map.forEach((f, i) => { if (f && used.has(f)) map[i] = ""; else used.add(f); });
+    return { header: true, map };
+  }
+  const n = (rows[0] || []).length;
+  const def = ["title", "userName", "password", "url", "notes"];
+  return { header: false, map: Array.from({ length: n }, (_, i) => def[i] || "") };
+}
+function importDialog(prefill) {
+  let rows = [], guess = { header: false, map: [] };
+  const o = dialog(`<h2>Passwörter importieren</h2>
+    <div class="small" style="color:#4A4450"><b>Aus Excel:</b> Zeilen in Excel markieren, Strg+C, dann hier ins Feld klicken und Strg+V.<br>
+      <b>Aus einer Datei:</b> CSV-Export aus Edge, Chrome, Firefox, Bitwarden, KeePass, 1Password oder Excel («CSV UTF-8»).</div>
+    <textarea id="im-text" class="field mono" rows="5" placeholder="Hier einfügen (Strg+V) …" style="font-size:12px"></textarea>
+    <div class="row"><label class="btn" for="im-file">${I.upload} CSV-Datei wählen …</label><input type="file" id="im-file" accept=".csv,.txt,.tsv" class="hidden"><span id="im-fname" class="small muted"></span></div>
+    <div id="im-map"></div>
+    <div class="row">
+      <label class="row" style="gap:6px"><input type="checkbox" id="im-dup" checked style="accent-color:var(--mag-btn)"> Doppelte Einträge überspringen</label>
+    </div>
+    <div class="small muted" id="im-cathint" style="margin-top:-6px"></div>
+    <div id="dlg-msg"></div>
+    <div class="acts"><button class="btn" data-close>Abbrechen</button><button class="btn p" id="im-go" disabled>Importieren</button></div>`, null, true);
+  const ta = o.querySelector("#im-text"), mapBox = o.querySelector("#im-map"), go = o.querySelector("#im-go");
+  const update = () => {
+    rows = parseTable(ta.value); guess = guessMapping(rows);
+    drawMap();
+  };
+  const curMap = () => [...mapBox.querySelectorAll("select")].map(s => s.value);
+  const drawMap = () => {
+    const data = guess.header ? rows.slice(1) : rows;
+    if (!rows.length) { mapBox.innerHTML = ""; go.disabled = true; go.textContent = "Importieren"; return; }
+    const n = Math.max(...rows.map(r => r.length));
+    const sel = i => `<select class="field" style="height:34px;font-size:13px;min-width:120px">${IMPORT_FIELDS.map(([v, l]) => `<option value="${v}" ${guess.map[i] === v ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+    const show = (v, i) => (curMap()[i] === "password" || guess.map[i] === "password") && v ? "••••••" : esc(v.length > 40 ? v.slice(0, 40) + "…" : v);
+    mapBox.innerHTML = `<div class="small" style="margin-bottom:6px"><b>${data.length} Zeile${data.length === 1 ? "" : "n"}</b> erkannt${guess.header ? " (erste Zeile = Spaltennamen)" : ""}. Bitte prüfen, welche Spalte was enthält:</div>
+      <div class="gridwrap" style="max-height:240px"><table class="grid prev"><thead><tr>${Array.from({ length: n }, (_, i) => `<th style="padding:6px">${sel(i)}${guess.header ? `<div class="small muted" style="padding:4px 2px 0;font-weight:400">${esc(rows[0][i] || "")}</div>` : ""}</th>`).join("")}</tr></thead>
+      <tbody>${data.slice(0, 6).map(r => `<tr>${Array.from({ length: n }, (_, i) => `<td style="padding:6px 8px;font-size:12px">${show(r[i] || "", i)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    mapBox.querySelectorAll("select").forEach((s, i) => s.addEventListener("change", () => { guess.map[i] = s.value; check(); }));
+    check();
+  };
+  const check = () => {
+    const m = curMap(), data = guess.header ? rows.slice(1) : rows;
+    const ok = data.length && (m.includes("title") || m.includes("url") || m.includes("userName"));
+    go.disabled = !ok;
+    go.textContent = ok ? `${data.length} Einträge importieren` : "Importieren";
+    o.querySelector("#im-cathint").textContent = m.includes("category")
+      ? "Kategorien aus der Liste werden übernommen (fehlende werden angelegt). Einträge ohne Kategorie kommen in «Ohne Kategorie»."
+      : "Die Einträge kommen in «Ohne Kategorie». Danach in der Spalte «Kategorie · Geräte» zuordnen.";
+    dlgMsg(data.length && !ok ? "Bitte mindestens einer Spalte «Bezeichnung», «URL» oder «Benutzer» zuordnen." : "");
+  };
+  ta.addEventListener("input", update);
+  o.querySelector("#im-file").addEventListener("change", ev => {
+    const f = ev.target.files[0]; if (!f) return;
+    o.querySelector("#im-fname").textContent = f.name;
+    const rd = new FileReader();
+    rd.onload = () => {
+      let t = rd.result;
+      if (t.includes("�")) { const r2 = new FileReader(); r2.onload = () => { ta.value = r2.result; update(); }; r2.readAsText(f, "windows-1252"); return; }
+      ta.value = t; update();
+    };
+    rd.readAsText(f, "utf-8");
+  });
+  go.addEventListener("click", async () => {
+    const m = curMap(), data = guess.header ? rows.slice(1) : rows;
+    const items = data.map(r => { const it = { category: "", title: "", userName: "", password: "", url: "", notes: "", pc: "" }; m.forEach((f, i) => { if (f) it[f] = (r[i] || "").trim() === "" ? it[f] : (f === "password" ? r[i] : (it[f] ? it[f] + " " : "") + r[i].trim()); }); return it; });
+    try {
+      const res = await run("Wird importiert …", () => api.import(items, "", o.querySelector("#im-dup").checked));
+      S.data = res.data; closeDialog(); S.view = "pw"; S.q = ""; render();
+      toast(`${res.added} ${res.added === 1 ? "Eintrag" : "Einträge"} importiert${res.skipped ? `, ${res.skipped} doppelte übersprungen` : ""}.`);
+    } catch (e) { dlgMsg(errText(e)); }
+  });
+  if (prefill) { ta.value = prefill; update(); }
+  ta.focus();
+}
+
+// ----- Abos -----
+const ABO_INT = [["monatlich", 1, "Mt."], ["vierteljährlich", 1 / 3, "Quartal"], ["halbjährlich", 1 / 6, "Halbjahr"], ["jährlich", 1 / 12, "Jahr"], ["alle 2 Jahre", 1 / 24, "2 Jahre"], ["wöchentlich", 52 / 12, "Woche"]];
+const ABO_NOTICE = ["", "jederzeit", "1 Woche", "2 Wochen", "1 Monat", "2 Monate", "3 Monate", "6 Monate"];
+const ABO_CUR = ["CHF", "EUR", "USD"];
+function aboInt(a) { return ABO_INT.find(x => x[0] === a.interval) || ABO_INT[0]; }
+function perMonth(a) { return (parseFloat(a.cost) || 0) * aboInt(a)[1]; }
+function money(v, cur) { return (cur || "CHF") + " " + Number(v || 0).toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function today0() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+function parseISO(s) { if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null; const d = new Date(s + "T00:00:00"); return isNaN(d) ? null : d; }
+function fmtD(d) { return d ? d.toLocaleDateString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" }) : "–"; }
+function addInt(d, interval, sign) {
+  const n = new Date(d), k = sign || 1;
+  const m = { "monatlich": 1, "vierteljährlich": 3, "halbjährlich": 6, "jährlich": 12, "alle 2 Jahre": 24 }[interval];
+  if (m) n.setMonth(n.getMonth() + k * m); else n.setDate(n.getDate() + k * 7);
+  return n;
+}
+// nächste Verlängerung; liegt das Datum in der Vergangenheit, wird es fortgeschrieben
+function nextDue(a) {
+  let d = parseISO(a.next); if (!d) return null;
+  if (a.status === "gekündigt") return d;
+  const t = today0(); let g = 0;
+  while (d < t && g++ < 600) d = addInt(d, a.interval);
+  return d;
+}
+// letzter Tag, an dem noch gekündigt werden kann
+function noticeBy(a) {
+  const d = nextDue(a); if (!d || !a.notice || a.notice === "jederzeit") return null;
+  const m = a.notice.match(/(\d+)\s*(Woche|Wochen|Monat|Monate)/); if (!m) return null;
+  const n = new Date(d), v = +m[1];
+  if (/Woche/.test(m[2])) n.setDate(n.getDate() - 7 * v); else n.setMonth(n.getMonth() - v);
+  return n;
+}
+function daysTo(d) { return d ? Math.round((d - today0()) / 86400000) : null; }
+function aboEntries() { return S.data.entries.filter(e => e.abo && e.abo.active); }
+function aboHints() {
+  const out = [];
+  aboEntries().filter(e => e.abo.status !== "gekündigt").forEach(e => {
+    const nb = noticeBy(e.abo), dn = daysTo(nb), nd = nextDue(e.abo), dd = daysTo(nd);
+    if (nb && dn >= 0 && dn <= 30) out.push({ e, kind: "kuend", days: dn, date: nb, text: `Kündigen bis ${fmtD(nb)} (${dn === 0 ? "heute" : "in " + dn + " Tag" + (dn === 1 ? "" : "en")}), sonst Verlängerung am ${fmtD(nd)}` });
+    else if (nd && dd >= 0 && dd <= 30) out.push({ e, kind: "verl", days: dd, date: nd, text: `Verlängert sich am ${fmtD(nd)} (${dd === 0 ? "heute" : "in " + dd + " Tag" + (dd === 1 ? "" : "en")}) · ${money(e.abo.cost, e.abo.currency)}` });
+  });
+  return out.sort((a, b) => a.days - b.days);
+}
+function aboSums() {
+  const m = {};
+  aboEntries().filter(e => e.abo.status !== "gekündigt").forEach(e => { const c = e.abo.currency || "CHF"; m[c] = (m[c] || 0) + perMonth(e.abo); });
+  return ABO_CUR.filter(c => m[c]).map(c => ({ cur: c, month: m[c], year: m[c] * 12 }));
+}
+function aboBadge(a) { return a && a.active ? `<button class="abobadge${a.status === "gekündigt" ? " off" : ""}" tabindex="-1" data-gact="abo" title="Abo bearbeiten" aria-label="Abo bearbeiten">${I.repeat}${a.cost ? money(a.cost, a.currency) + "/" + aboInt(a)[2] : "Abo"}</button>` : ""; }
+
+function viewAbos() {
+  const all = aboEntries(), f = S.aboF || "aktiv";
+  let list = all.filter(e => f === "alle" || (f === "gekündigt" ? e.abo.status === "gekündigt" : e.abo.status !== "gekündigt"));
+  list = list.slice().sort((a, b) => (nextDue(a.abo) || 8e15) - (nextDue(b.abo) || 8e15) || a.title.localeCompare(b.title, "de"));
+  const sums = aboSums(), hints = aboHints();
+  const active = all.filter(e => e.abo.status !== "gekündigt").length;
+  const chip = (k, l, n) => `<button class="chip ${f === k ? "on" : ""}" data-act="abof" data-id="${k}">${l} <span>${n}</span></button>`;
+  return `<div class="pagehead"><div class="t"><h1>Abos</h1><div class="muted">${active} aktive${all.length - active ? ` · ${all.length - active} gekündigte` : ""}</div></div>
+      <div class="row"><button class="btn" data-act="abo-print" ${all.length ? "" : "disabled"}>${I.print} Drucken / PDF</button><button class="btn p" data-act="abo-new">${I.plus} Neues Abo</button></div></div>
+    <div class="abosums">
+      <div class="abosum"><span class="small muted">Kosten pro Monat</span>${sums.length ? sums.map(x => `<b>${money(x.month, x.cur)}</b>`).join("") : "<b>–</b>"}</div>
+      <div class="abosum"><span class="small muted">Kosten pro Jahr</span>${sums.length ? sums.map(x => `<b>${money(x.year, x.cur)}</b>`).join("") : "<b>–</b>"}</div>
+      <div class="abosum ${hints.length ? "warn" : ""}"><span class="small muted">Demnächst (30 Tage)</span><b>${hints.length ? hints.length + " Hinweis" + (hints.length === 1 ? "" : "e") : "nichts fällig"}</b></div>
+    </div>
+    ${hints.length ? `<section class="box hints">${hints.map(h => `<button class="hint ${h.kind}" data-act="abo-edit" data-id="${esc(h.e.id)}"><b>${esc(h.e.title)}</b><span>${esc(h.text)}</span></button>`).join("")}</section>` : ""}
+    <div class="chips">${chip("aktiv", "Aktiv", active)}${chip("gekündigt", "Gekündigt", all.length - active)}${chip("alle", "Alle", all.length)}</div>
+    <div class="gridwrap"><table class="grid abotable">
+      <thead><tr><th><span>Dienst</span></th><th><span>Kosten</span></th><th><span>Intervall</span></th><th><span>Nächste Verlängerung</span></th><th><span>Kündigen bis</span></th><th><span>Zahlungsart</span></th><th><span>Status</span></th><th></th></tr></thead>
+      <tbody>${list.map(e => {
+        const a = e.abo, nd = nextDue(a), nb = noticeBy(a), dn = daysTo(nb), dd = daysTo(nd);
+        const login = e.userName || e.password || e.url;
+        return `<tr class="aborow" data-act="abo-edit" data-id="${esc(e.id)}">
+          <td><b>${esc(e.title)}</b></td>
+          <td>${a.cost ? money(a.cost, a.currency) : "–"}</td>
+          <td>${esc(a.interval || "–")}</td>
+          <td class="${dd !== null && dd >= 0 && dd <= 30 && a.status !== "gekündigt" ? "soon" : ""}">${fmtD(nd)}</td>
+          <td class="${dn !== null && dn >= 0 && dn <= 30 && a.status !== "gekündigt" ? "soon" : ""}">${nb ? fmtD(nb) : esc(a.notice || "–")}</td>
+          <td>${esc(a.payment || "–")}</td>
+          <td><span class="status ${a.status === "gekündigt" ? "off" : "on"}">${esc(a.status || "aktiv")}</span></td>
+          <td class="racts" style="opacity:1">${login ? `<button class="btn g" data-act="abo-login" data-id="${esc(e.id)}" title="Zum Login in der Passwortliste">${I.key} Login</button>` : ""}</td>
+        </tr>`;
+      }).join("")}</tbody></table>
+      ${list.length ? "" : `<div class="emptybox">${all.length ? "Keine Abos in dieser Ansicht." : "Noch keine Abos. Mit «+ Neues Abo» anlegen oder in der Passwortliste bei einem Login das Abo-Symbol " + I.repeat + " anklicken."}</div>`}
+    </div>
+    <div class="small muted">Laufende Abos werden automatisch fortgeschrieben: Liegt die Verlängerung in der Vergangenheit, rechnet die App mit dem nächsten Termin. Kosten verschiedener Währungen werden getrennt summiert.</div>`;
+}
+
+async function ensureAboCat() {
+  const c = S.data.categories.find(c => !c.root && c.name.toLowerCase() === "abos");
+  if (c) return c.id;
+  const r = await api.addCategory("Abos"); S.data = r.data; return r.id;
+}
+
+function aboDialog(entry, isNew) {
+  const a = Object.assign({ active: true, cost: "", currency: "CHF", interval: "monatlich", next: "", notice: "", payment: "", status: "aktiv", start: "", notes: "" }, entry.abo || {});
+  const opt = (list, v) => list.map(x => `<option ${x === v ? "selected" : ""}>${esc(x)}</option>`).join("");
+  const hasLogin = entry.userName || entry.password || entry.url;
+  dialog(`<h2>${isNew ? "Neues Abo" : entry.abo ? "Abo bearbeiten" : "Als Abo erfassen"}</h2>
+    <form id="af" class="stack" autocomplete="off">
+      <div><label class="lbl" for="a-title">Dienst</label><input id="a-title" class="field" value="${esc(entry.title || "")}" placeholder="z.B. Microsoft 365, Adobe, Zeitung" ${isNew ? "autofocus" : ""}></div>
+      <div class="fgrid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+        <div><label class="lbl" for="a-cost">Kosten</label><div class="row" style="flex-wrap:nowrap;gap:6px"><input id="a-cost" class="field" value="${esc(a.cost)}" placeholder="12.90" inputmode="decimal" ${isNew ? "" : "autofocus"}><select id="a-cur" class="field" style="width:86px">${opt(ABO_CUR, a.currency)}</select></div></div>
+        <div><label class="lbl" for="a-int">Intervall</label><select id="a-int" class="field">${opt(ABO_INT.map(x => x[0]), a.interval)}</select></div>
+        <div><label class="lbl" for="a-next">Nächste Verlängerung</label><input id="a-next" type="date" class="field" value="${esc(a.next)}"></div>
+        <div><label class="lbl" for="a-notice">Kündigungsfrist</label><select id="a-notice" class="field">${ABO_NOTICE.map(x => `<option value="${esc(x)}" ${x === a.notice ? "selected" : ""}>${x ? esc(x) : "– keine Angabe –"}</option>`).join("")}</select></div>
+        <div><label class="lbl" for="a-status">Status</label><select id="a-status" class="field">${opt(["aktiv", "gekündigt"], a.status)}</select></div>
+        <div><label class="lbl" for="a-start">Vertragsbeginn</label><input id="a-start" type="date" class="field" value="${esc(a.start)}"></div>
+      </div>
+      <div><label class="lbl" for="a-pay">Zahlungsart</label><input id="a-pay" class="field" value="${esc(a.payment)}" placeholder="z.B. Visa …4411, Rechnung, TWINT, LSV">
+        <div class="small muted" style="margin-top:4px">Bitte keine vollständigen Kartennummern eintragen, die letzten 4 Ziffern genügen.</div></div>
+      <div><label class="lbl" for="a-notes">Notizen zum Abo</label><textarea id="a-notes" class="field" rows="2" placeholder="z.B. Kunden- oder Vertragsnummer, Lizenzanzahl">${esc(a.notes)}</textarea></div>
+      <div id="a-calc" class="small muted"></div>
+      <div id="dlg-msg"></div>
+      <div class="acts">${!isNew && entry.abo ? `<button class="btn danger" type="button" id="a-del" style="margin-right:auto">${hasLogin ? "Kein Abo mehr" : "Abo löschen"}</button>` : ""}
+        <button class="btn" type="button" data-close>Abbrechen</button><button class="btn p" type="submit">Speichern</button></div>
+    </form>`, o => {
+      const val = id => o.querySelector(id).value;
+      const calc = () => {
+        const x = { cost: val("#a-cost").replace(",", "."), interval: val("#a-int"), next: val("#a-next"), notice: val("#a-notice"), status: val("#a-status"), currency: val("#a-cur") };
+        const pm = perMonth(x), nb = noticeBy(x), nd = nextDue(x);
+        o.querySelector("#a-calc").textContent = [pm ? `Entspricht ${money(pm, x.currency)} pro Monat bzw. ${money(pm * 12, x.currency)} pro Jahr.` : "",
+          nd && x.next && nd.getTime() !== parseISO(x.next).getTime() ? `Nächster Termin: ${fmtD(nd)}.` : "", nb ? `Kündigen spätestens bis ${fmtD(nb)}.` : ""].filter(Boolean).join(" ");
+      };
+      o.querySelectorAll("input,select").forEach(el => el.addEventListener("input", calc)); calc();
+      o.querySelector("#af").addEventListener("submit", async ev => {
+        ev.preventDefault();
+        const title = val("#a-title").trim(); if (!title) return dlgMsg("Bitte den Dienst angeben.");
+        const abo = { active: true, cost: val("#a-cost"), currency: val("#a-cur"), interval: val("#a-int"), next: val("#a-next"), notice: val("#a-notice"), payment: val("#a-pay"), status: val("#a-status"), start: val("#a-start"), notes: val("#a-notes") };
+        try {
+          const base = isNew ? { id: "", categoryId: await ensureAboCat(), userName: "", password: "", url: "", notes: "", devices: [] } : entry;
+          const r = await api.saveEntry(Object.assign({}, base, { title, abo, modified: "" }));
+          S.data = r.data; closeDialog(); toast("Abo gespeichert."); rerenderContent();
+        } catch (e) { dlgMsg(errText(e)); }
+      });
+      const del = o.querySelector("#a-del");
+      if (del) del.addEventListener("click", async () => {
+        try {
+          if (!hasLogin) {
+            if (!await confirmDlg("Abo löschen?", "«" + esc(entry.title) + "» wird gelöscht.", "Löschen", true)) return;
+            S.data = await api.deleteEntry(entry.id);
+          } else {
+            const r = await api.saveEntry(Object.assign({}, entry, { abo: { active: false } })); S.data = r.data;
+          }
+          closeDialog(); toast(hasLogin ? "Abo-Angaben entfernt. Der Login bleibt erhalten." : "Abo gelöscht."); rerenderContent();
+        } catch (e) { dlgMsg(errText(e)); }
+      });
+    });
+}
+
+function printAbosDialog() {
+  dialog(`<h2>Abos drucken</h2><div style="color:#4A4450">Sollen Benutzername und Passwort der Abos mitgedruckt werden?</div>
+    <p class="note">Ein Ausdruck mit Passwörtern ist nicht verschlüsselt. Bitte sicher aufbewahren oder nach Gebrauch vernichten.</p>
+    <div class="acts"><button class="btn" data-close>Abbrechen</button><button class="btn" id="pa-no">Ohne Zugangsdaten</button><button class="btn p" id="pa-yes">${I.key} Mit Zugangsdaten</button></div>`,
+    o => {
+      o.querySelector("#pa-no").addEventListener("click", () => { closeDialog(); printAbos(false); });
+      o.querySelector("#pa-yes").addEventListener("click", () => { closeDialog(); printAbos(true); });
+    });
+}
+function printAbos(withCreds) {
+  const all = aboEntries().slice().sort((a, b) => (nextDue(a.abo) || 8e15) - (nextDue(b.abo) || 8e15));
+  const now = new Date(), stamp = now.toLocaleDateString("de-CH") + " " + now.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" });
+  const sums = aboSums();
+  $("#print").innerHTML = `<style>@page{@bottom-left{content:"Gedruckt ${stamp}"}}</style><div class="pr-page">${prHead()}<div class="pr-title">Abo-Übersicht</div>
+    <div class="pr-sec"><h2>Kosten (aktive Abos)</h2><table>${sums.map(x => `<tr><td>${x.cur}</td><td>${money(x.month, x.cur)} pro Monat · ${money(x.year, x.cur)} pro Jahr</td></tr>`).join("") || "<tr><td>–</td><td></td></tr>"}</table></div>
+    <div class="pr-sec pr-pw"><h2>Abos</h2><table><tr><th>Dienst</th><th>Kosten</th><th>Intervall</th><th>Verlängerung</th><th>Kündigen bis</th><th>Zahlungsart</th><th>Status</th></tr>
+    ${all.map(e => { const a = e.abo, nb = noticeBy(a); return `<tr${withCreds && (e.userName || e.password) ? ' class="pr-hc"' : ""}><td>${esc(e.title)}</td><td>${a.cost ? money(a.cost, a.currency) : ""}</td><td>${esc(a.interval)}</td><td>${fmtD(nextDue(a))}</td><td>${nb ? fmtD(nb) : esc(a.notice)}</td><td>${esc(a.payment)}</td><td>${esc(a.status)}</td></tr>${withCreds && (e.userName || e.password) ? `<tr class="pr-cred"><td></td><td colspan="6">${e.userName ? `Benutzer: <span class="mono">${esc(e.userName)}</span>` : ""}${e.userName && e.password ? " &nbsp;·&nbsp; " : ""}${e.password ? `Passwort: <span class="mono">${esc(e.password)}</span>` : ""}</td></tr>` : ""}`; }).join("")}</table></div></div>`;
+  setTimeout(() => window.print(), 50);
+}
+
+// ----- Hilfe -----
+function viewHelp() {
+  const ho = S.data.mode === "uebergabe";
+  const sec = (id, title, body, open) => `<details class="help" id="h-${id}" ${open ? "open" : ""}><summary>${title}</summary><div class="helpbody">${body}</div></details>`;
+  const toc = [["start", "Erste Schritte"], ["geraete", "Geräte"], ["pw", "Passwörter"], ["abos", "Abos"], ["import", "Importieren"], ["druck", "Drucken"], ["sicher", "Sicherheit"], ["backup", "Sicherung"], ["update", "Updates"], ["keepass", "KeePass"]];
+  if (hasSupport(P)) toc.push(["support", "Hilfe von " + P.firma]);
+  if (ho) toc.unshift(["dm", "Übergabe"]);
+  const who = P ? esc(P.firma) : "Ihr IT-Partner";
+  return `<div class="pagehead"><div class="t"><h1>Hilfe</h1><div class="muted">So arbeiten Sie mit dem <span class="brand" style="font-size:inherit;font-weight:600">${brand()}</span></div></div></div>
+  <div class="chips">${toc.map(([id, t]) => `<button class="chip" data-act="help-jump" data-id="${id}">${t}</button>`).join("")}</div>
+  <div class="stack" style="max-width:900px;gap:12px">
+  ${ho ? sec("dm", "Für den IT-Partner: Erfassen und übergeben", `
+    <ol>
+      <li>Firmenangaben einmal erfassen (Zahnrad → <b>«Firmenangaben»</b>) und mit <b>«Auf USB-Stick kopieren»</b> Programm und Angaben auf den Stick des Kunden bringen.</li>
+      <li>Stick beim Kunden einstecken, das Programm starten, den Tresor anlegen bzw. mit Ihrem <b>Übergabe-Passwort</b> anmelden.</li>
+      <li>Unter <b>Geräte</b> auf <b>«Diesen PC erfassen»</b> klicken. Das dauert 10–30 Sekunden. Für jeden PC wiederholen.</li>
+      <li>Bekannte Passwörter gleich unter <b>Passwörter</b> eintragen oder importieren.</li>
+      <li>Zum Schluss oben <b>«Passwort setzen»</b> drücken und bestätigen. Beim nächsten Start legt der Kunde sein eigenes Master-Passwort fest.</li>
+    </ol>
+    <p class="note">Nach der Übergabe funktioniert Ihr Übergabe-Passwort nicht mehr. Sie haben dann keinen Zugriff mehr, nur noch der Kunde.</p>`, true) : ""}
+  ${sec("start", "Erste Schritte", `
+    <p>${esc(appTitle())} läuft direkt vom USB-Stick, ohne Installation. Alle Daten liegen verschlüsselt in der Datei <b>daten.kdbx</b> neben dem Programm.</p>
+    <ul>
+      <li><b>Start:</b> ${P ? "Kontaktdaten Ihres IT-Partners und der" : "Der"} Weg zu Geräten, Passwörtern und Abos.</li>
+      <li><b>Geräte:</b> die Datenblätter Ihrer PCs.</li>
+      <li><b>Passwörter:</b> alle Zugangsdaten in einer Liste.</li>
+      <li><b>Zahnrad</b> ${I.gear}: Einstellungen, Sicherung und Master-Passwort.</li>
+      <li><b>Sperren</b>: schliesst den Tresor. Zum Weiterarbeiten das Master-Passwort eingeben.</li>
+    </ul>`, !ho)}
+  ${sec("geraete", "Geräte und Datenblätter", `
+    <ul>
+      <li><b>Neuen PC erfassen:</b> Stick am PC einstecken, Programm starten, <b>Geräte → «Diesen PC erfassen»</b>. Hersteller, Seriennummer, Hardware, Drucker, Software und Netzwerk werden automatisch ausgelesen.</li>
+      <li><b>Erneut erfassen:</b> Ein PC wird an der Seriennummer erkannt und aktualisiert. Ihre eigenen Angaben bleiben erhalten.</li>
+      <li><b>Ergänzen:</b> Im Datenblatt auf <b>«Bearbeiten»</b> klicken, z.B. Standort, Hauptbenutzer, Kaufdatum, Garantie, Notizen oder eigene Felder wie eine Inventarnummer.</li>
+      <li><b>Zugehörige Passwörter:</b> Alle Passwörter, bei denen dieses Gerät angekreuzt ist, erscheinen unten im Datenblatt. Mit <b>«+ Passwort»</b> legen Sie direkt eines für dieses Gerät an.</li>
+    </ul>`)}
+  ${sec("pw", "Passwörter eintragen", `
+    <p>Die Liste funktioniert wie eine Tabelle in Excel: in eine Zelle klicken und schreiben. <b>Gespeichert wird automatisch</b>, sobald Sie die Zeile verlassen.</p>
+    <table class="keys">
+      <tr><td><kbd>Tab</kbd></td><td>nächste Zelle</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>Zeile darunter, in der letzten Zeile: neue Zeile</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Änderung in der Zelle verwerfen</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Zeile wechseln</td></tr>
+    </table>
+    <ul>
+      <li><b>Neue Zeile:</b> Knopf <b>«+ Neue Zeile»</b>. Sie übernimmt die gerade gewählte Kategorie und das Gerät.</li>
+      <li><b>Passwort:</b> wird nur in der aktiven Zelle angezeigt. ${I.copy} kopiert es, ${I.dice} erzeugt ein sicheres neues.</li>
+      <li><b>Benutzer und URL kopieren:</b> Mit der Maus über die Zeile fahren, dann ${I.copy} in der Zelle anklicken. ${I.ext} öffnet die URL direkt im Browser.</li>
+      <li><b>Kategorie und Geräte:</b> in die Spalte <b>«Kategorie · Geräte»</b> klicken. Eine Kategorie wählen und beliebig viele Geräte ankreuzen, z.B. ein E-Mail-Konto, das auf drei PCs eingerichtet ist.</li>
+      <li><b>Filtern:</b> oben eine Kategorie und/oder ein Gerät wählen. Die Suche durchsucht alle Einträge.</li>
+      <li><b>Sicherheit:</b> Der Punkt rechts im Passwortfeld zeigt die Stärke (<i class="sdot s2"></i> stark, <i class="sdot s1"></i> mittel, <i class="sdot s0"></i> schwach). «3×» bedeutet, dass dasselbe Passwort in drei Einträgen vorkommt. Ein Klick auf die Spaltenüberschrift «Passwort» sortiert die schwachen nach oben. Der <b>Sicherheitscheck</b> über der Liste filtert schwache und mehrfach verwendete Passwörter. Diese am besten mit ${I.dice} durch ein neues ersetzen und beim jeweiligen Dienst ändern.</li>
+      <li><b>Kategorien anpassen:</b> <b>«Kategorien bearbeiten»</b>: umbenennen, eigene hinzufügen, leere löschen.</li>
+      <li><b>Löschen:</b> Papierkorb ${I.trash} am Zeilenende. Direkt danach lässt sich das mit <b>«Rückgängig»</b> zurücknehmen.</li>
+      <li><b>Details:</b> Stift ${I.edit} am Zeilenende öffnet alle Angaben in einem Fenster, praktisch für längere Notizen.</li>
+    </ul>`)}
+  ${sec("abos", "Abos verwalten", `
+    <ul>
+      <li><b>Abo zu einem Login:</b> In der Passwortliste am Zeilenende auf ${I.repeat} klicken und die Abo-Angaben eintragen. Die Zeile zeigt danach ein Schild wie <span class="abobadge" style="position:static">${I.repeat}CHF 12.90/Mt.</span>.</li>
+      <li><b>Abo ohne Login</b> (z.B. Zeitung, Versicherung): Reiter <b>Abos → «+ Neues Abo»</b>.</li>
+      <li>Erfasst werden Kosten (CHF, EUR oder USD), Intervall, nächste Verlängerung, Kündigungsfrist, Zahlungsart, Status, Vertragsbeginn und Notizen.</li>
+      <li>Der Reiter <b>Abos</b> zeigt die Kosten pro Monat und pro Jahr. Abos, die in den nächsten 30 Tagen verlängert werden oder deren Kündigungsfrist abläuft, erscheinen oben als Hinweis. Die Startseite meldet sie ebenfalls.</li>
+      <li>Bei der Zahlungsart bitte keine vollständigen Kartennummern eintragen. Die letzten 4 Ziffern genügen.</li>
+      <li>Die Abo-Liste lässt sich mit <b>«Drucken / PDF»</b> ausgeben.</li>
+    </ul>`)}
+  ${sec("import", "Passwörter importieren (Excel, Browser)", `
+    <p>Knopf <b>«Importieren»</b> auf der Passwort-Seite. Sie sehen immer zuerst eine Vorschau und können prüfen, welche Spalte was enthält.</p>
+    <ul>
+      <li><b>Aus Excel:</b> in Excel die Zeilen markieren (gern mit Überschriften), <kbd>Strg</kbd>+<kbd>C</kbd>, im Import-Fenster ins Feld klicken, <kbd>Strg</kbd>+<kbd>V</kbd>. Sie können mehrere Zeilen auch direkt in die Tabelle einfügen.</li>
+      <li><b>Aus Microsoft Edge:</b> Einstellungen → Kennwörter → «…» → <i>Kennwörter exportieren</i>. Die CSV-Datei im Import-Fenster mit <b>«CSV-Datei wählen»</b> öffnen.</li>
+      <li><b>Aus Google Chrome:</b> Einstellungen → Google Passwortmanager → Einstellungen → <i>Passwörter exportieren</i>.</li>
+      <li><b>Aus Firefox:</b> Passwörter (about:logins) → «…» → <i>Passwörter exportieren</i>.</li>
+      <li>Hat die Liste eine Spalte <b>Kategorie</b>, wird sie übernommen. Sonst kommen die Einträge in <b>«Ohne Kategorie»</b> und lassen sich danach zuordnen.</li>
+    </ul>
+    <p class="note"><b>Wichtig:</b> Exportierte CSV-Dateien sind <b>nicht verschlüsselt</b>. Löschen Sie sie nach dem Import und leeren Sie den Papierkorb.</p>`)}
+  ${sec("druck", "Drucken und PDF", `
+    <ul>
+      <li>Im Datenblatt auf <b>«Drucken / PDF»</b> klicken. Mit dem Drucker <i>Microsoft Print to PDF</i> entsteht eine PDF-Datei.</li>
+      <li>Alle Geräte auf einmal: Zahnrad → <b>«Alle Geräte drucken / als PDF»</b>.</li>
+      <li>Der Ausdruck enthält die <b>zugehörigen Passwörter</b> des Geräts. Bewahren Sie ihn vertraulich auf.</li>
+      <li>Erscheinen oben oder unten ein Dateipfad oder ein Titel, schalten Sie im Druckfenster unter «Weitere Einstellungen» die Option <i>Kopf- und Fusszeilen</i> aus.</li>
+    </ul>`)}
+  ${sec("sicher", "Sicherheit, Master-Passwort und Wiederherstellung", `
+    <ul>
+      <li><b>Master-Passwort:</b> öffnet den Tresor. Nur Sie kennen es${P ? ", auch " + who + " nicht" : ""}. Ändern unter Zahnrad → <b>«Master-Passwort ändern»</b>.</li>
+      <li><b>Passwort vergessen?</b> Auf dem Anmeldebildschirm <b>«Passwort vergessen?»</b> wählen und den ausgedruckten <b>Wiederherstellungsschlüssel</b> eingeben. Danach legen Sie ein neues Master-Passwort fest.</li>
+      <li>Den Wiederherstellungsschlüssel <b>nicht zusammen mit dem Stick</b> aufbewahren. Einen neuen erzeugen: Zahnrad → <b>«Neuen Wiederherstellungsschlüssel erzeugen»</b>.</li>
+      <li><b>Automatische Sperre</b> nach einigen Minuten ohne Bedienung (einstellbar unter Zahnrad).</li>
+      <li><b>Kopierte Passwörter</b> werden nach 30 Sekunden aus der Zwischenablage gelöscht und nicht im Windows-Zwischenablageverlauf gespeichert.</li>
+    </ul>
+    <p class="note">Ohne Master-Passwort <b>und</b> ohne Wiederherstellungsschlüssel lassen sich die Daten nicht mehr öffnen${P ? ", auch nicht durch " + who : ""}.</p>`)}
+  ${sec("backup", "Sicherung", `
+    <ul>
+      <li>Bei jedem Start wird vor der ersten Änderung automatisch eine verschlüsselte Kopie im Ordner <b>Backup</b> auf dem Stick angelegt. Die letzten 20 bleiben erhalten.</li>
+      <li>Da ein USB-Stick verloren gehen oder kaputtgehen kann: Zahnrad → <b>«Sicherung an anderen Ort»</b>, z.B. auf den PC oder eine externe Festplatte.</li>
+      <li>Eine Sicherung zurückholen: Programm schliessen, die gewünschte Datei aus <b>Backup</b> nach <b>daten.kdbx</b> kopieren (die alte vorher umbenennen).${P ? " Bei Fragen hilft " + who + "." : ""}</li>
+    </ul>`)}
+  ${sec("update", "Updates", `
+    <ul>
+      <li>Zahnrad → <b>«Nach Updates suchen»</b>. Nur dann verbindet sich die App mit GitHub, sonst nie.</li>
+      <li>Ist eine neue Version da, lädt <b>«Jetzt aktualisieren»</b> sie, prüft die Prüfsumme (und bei signierten Versionen die Signatur), ersetzt das Programm auf dem Stick und startet neu.</li>
+      <li>Ihre Daten (<b>daten.kdbx</b>) und die Firmenangaben bleiben unverändert. Vorher wird automatisch eine Sicherung angelegt.</li>
+    </ul>`)}
+  ${sec("keepass", "Offenes KeePass-Format", `
+    <p>Ihre Daten liegen im Standardformat von KeePass. Sie können <b>daten.kdbx</b> jederzeit mit demselben Master-Passwort öffnen: mit <b>KeePass</b> oder <b>KeePassXC</b> am PC, <b>KeePassDX</b> (Android) oder <b>Strongbox</b> (iPhone). Kategorien sind dort Ordner, Geräte stehen als Tags und im Feld «Geräte».</p>
+    <p class="note">Bitte die Datei nicht gleichzeitig in zwei Programmen oder auf zwei PCs offen haben.</p>`)}
+  ${hasSupport(P) ? sec("support", "Hilfe von " + esc(P.firma), `
+    <p><b>${esc(P.firma)}</b>${[P.strasse, P.ort].filter(Boolean).map(x => " · " + esc(x)).join("")}<br>
+    ${P.tel ? "Telefon " + esc(P.tel) : ""}${P.mail ? ` · <a href="#" data-act="url" data-id="mailto:${esc(P.mail)}">${esc(P.mail)}</a>` : ""}${P.web ? ` · <a href="#" data-act="url" data-id="https://${esc(P.web)}">${esc(P.web)}</a>` : ""}
+    ${P.helpdesk ? `<br>Helpdesk <b>${esc(P.helpdesk)}</b>${P.helpdeskInfo ? " (" + esc(P.helpdeskInfo) + ")" : ""}` : ""}${P.supportInfo ? "<br>" + esc(P.supportInfo) : ""}</p>`) : ""}
+  <p class="small muted">${esc(appTitle())} · Version ${esc(S.status.version)} · Open Source</p>
+  </div>`;
+}
+
+// ----- Einstellungen -----
+function viewSettings() {
+  const d = S.data, ho = d.mode === "uebergabe", s = S.status;
+  const lockMin = getLockMin();
+  return `<div class="pagehead"><div class="t"><h1>Einstellungen</h1></div></div>
+  <div class="stack" style="max-width:860px;gap:16px">
+    ${ho ? `<section class="box tint"><div class="row" style="align-items:center">
+        <div style="flex:1 1 320px" class="stack" style="gap:4px"><h2 style="font-size:15px">Übergabe an den Kunden</h2>
+        <div style="color:#4A4450">Solange dieser Schritt nicht gemacht ist, öffnet sich die App mit Ihrem Übergabe-Passwort. Nach der Übergabe legt der Kunde beim nächsten Start sein eigenes Master-Passwort fest.</div></div>
+        <button class="btn p" data-act="handover">${I.key} Passwort setzen</button></div></section>` : ""}
+    <section class="box"><h2 style="font-size:15px">Sicherheit</h2>
+      ${ho ? '<div class="small muted">Master-Passwort und Wiederherstellungsschlüssel legt der Kunde nach der Übergabe fest.</div>' : `<div class="row">
+        <button class="btn" data-act="change-master">Master-Passwort ändern</button>
+        <button class="btn" data-act="new-rec">Neuen Wiederherstellungsschlüssel erzeugen</button></div>`}
+      <div class="row"><label for="s-lock" style="font-weight:500">Automatisch sperren nach</label>
+        <select id="s-lock" class="field" style="width:170px;height:40px">
+          ${[2, 5, 10, 15, 30].map(m => `<option value="${m}" ${m === lockMin ? "selected" : ""}>${m} Minuten</option>`).join("")}
+        </select></div>
+      <div class="small muted">Kopierte Passwörter werden nach 30 Sekunden aus der Zwischenablage gelöscht und nicht im Windows-Zwischenablageverlauf gespeichert.</div>
+    </section>
+    <section class="box"><h2 style="font-size:15px">Offenes KeePass-Format</h2>
+      <div style="color:#4A4450">Alle Daten liegen in <b>daten.kdbx</b> (KeePass-Format KDBX 4). Die Datei lässt sich jederzeit mit demselben Master-Passwort direkt öffnen: mit KeePass oder KeePassXC am PC, KeePassDX auf Android oder Strongbox auf dem iPhone. Ein Export ist nicht nötig.</div>
+      <div class="small muted mono" style="overflow-wrap:anywhere">${esc(s.file)}</div>
+      <div><button class="btn" data-act="open-folder">${I.folder} Speicherort öffnen</button></div>
+    </section>
+    <section class="box"><h2 style="font-size:15px">Sicherung</h2>
+      <div style="color:#4A4450">Bei jedem Start wird vor der ersten Änderung automatisch eine verschlüsselte Kopie im Ordner <b>Backup</b> auf dem Stick abgelegt (die letzten 20 bleiben erhalten). Zusätzlich empfehlen wir eine Kopie auf einem anderen Laufwerk.</div>
+      <div class="row"><button class="btn" data-act="backup">Sicherung auf dem Stick</button><button class="btn" data-act="backup-to">Sicherung an anderen Ort …</button></div>
+    </section>
+    <section class="box"><h2 style="font-size:15px">Datenblätter</h2>
+      <div class="row"><button class="btn" data-act="print-all" ${d.pcs.length ? "" : "disabled"}>${I.print} Alle Geräte drucken / als PDF</button></div>
+    </section>
+    ${ho ? `<section class="box"><h2 style="font-size:15px">Firmenangaben (IT-Partner)</h2>
+      <div style="color:#4A4450">Logo, Adresse und Support, die der Kunde in der App und auf den Ausdrucken sieht. Änderbar nur im Übergabe-Modus.</div>
+      ${P ? `<div class="small">${supportLine(P)}</div>` : '<div class="small muted">Noch keine Firmenangaben erfasst.</div>'}
+      <div class="row"><button class="btn" data-act="partner-edit">${I.edit} Firmenangaben bearbeiten</button><button class="btn" data-act="prepare-stick">${I.upload} Auf USB-Stick kopieren …</button></div>
+    </section>` : ""}
+    <section class="box"><h2 style="font-size:15px">Programm-Update</h2>
+      <div style="color:#4A4450">Installierte Version <b>${esc(s.version)}</b>. Nur auf Knopfdruck fragt die App bei GitHub nach einer neueren Version. Ihre Daten bleiben dabei auf dem Stick und werden vorher gesichert.</div>
+      <div id="upd">${updBox()}</div>
+    </section>
+    <section class="box"><h2 style="font-size:15px">Hilfe &amp; Support</h2>
+      ${P ? `<div>${[P.firma, P.strasse, P.ort].filter(Boolean).map(esc).join(" · ")}</div>
+      <div>${[P.tel ? esc(P.tel) : "", P.mail ? `<a href="#" data-act="url" data-id="mailto:${esc(P.mail)}">${esc(P.mail)}</a>` : "", P.web ? `<a href="#" data-act="url" data-id="https://${esc(P.web)}">${esc(P.web)}</a>` : ""].filter(Boolean).join(" · ")}</div>
+      ${P.helpdesk ? `<div>Helpdesk ${esc(P.helpdesk)}${P.helpdeskInfo ? " · " + esc(P.helpdeskInfo) : ""}</div>` : ""}` : ""}
+      <div class="small muted">${esc(appTitle())} · Version ${esc(s.version)} · Open Source (MIT-Lizenz)</div>
+    </section>
+  </div>`;
+}
+
+// ----- Programm-Update -----
+function updBox() {
+  const u = S.update;
+  if (!u) return `<div class="row"><button class="btn" data-act="upd-check">${I.repeat} Nach Updates suchen</button></div>`;
+  if (u.error) return `<div class="err">${esc(u.error)}</div><div class="row"><button class="btn" data-act="upd-check">Nochmals versuchen</button></div>`;
+  if (!u.available) return `<div class="row" style="align-items:center"><span class="ok">✓ Sie haben die neueste Version${u.latest ? " (" + esc(u.latest) + ")" : ""}.</span><button class="btn g" data-act="upd-check">Erneut prüfen</button></div>`;
+  return `<div class="info"><b>Version ${esc(u.latest)}</b> ist verfügbar${u.published ? " (veröffentlicht am " + esc(u.published) + ")" : ""}.
+      ${u.notes ? `<div class="updnotes">${esc(u.notes)}</div>` : ""}</div>
+    <div class="row"><button class="btn p" data-act="upd-install">${I.upload} Jetzt aktualisieren</button>${u.page ? `<button class="btn g" data-act="url" data-id="${esc(u.page)}">${I.ext} Details auf GitHub</button>` : ""}</div>`;
+}
+
+// ---------- Dialoge ----------
+function dialog(html, onBind, wide) {
+  closeDialog();
+  const o = document.createElement("div");
+  o.className = "overlay"; o.id = "dlg";
+  o.innerHTML = `<div class="dialog${wide ? " " + (wide === true ? "wide" : wide) : ""}" role="dialog" aria-modal="true">${html}</div>`;
+  document.body.appendChild(o);
+  o.addEventListener("mousedown", ev => { if (ev.target === o) closeDialog(); });
+  o.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", closeDialog));
+  if (onBind) onBind(o);
+  const f = o.querySelector("[autofocus]") || o.querySelector("input,select,textarea,button"); if (f) f.focus();
+  return o;
+}
+function closeDialog() { const d = $("#dlg"); if (d) d.remove(); }
+function dlgMsg(text) { const m = $("#dlg-msg"); if (m) m.innerHTML = text ? `<div class="err">${esc(text)}</div>` : ""; }
+function confirmDlg(title, text, okLabel, danger) {
+  return new Promise(res => {
+    dialog(`<h2>${esc(title)}</h2><div style="color:#4A4450">${text}</div>
+      <div class="acts"><button class="btn" data-close>Abbrechen</button><button class="btn ${danger ? "danger" : "p"}" id="dlg-ok">${esc(okLabel)}</button></div>`,
+      o => { o.querySelector("#dlg-ok").addEventListener("click", () => { closeDialog(); res(true); }); o.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => res(false))); });
+  });
+}
+function promptDlg(title, label, value) {
+  return new Promise(res => {
+    dialog(`<h2>${esc(title)}</h2><form id="pf" class="stack"><div><label class="lbl" for="pv">${esc(label)}</label><input id="pv" class="field" value="${esc(value || "")}" autofocus></div>
+      <div id="dlg-msg"></div><div class="acts"><button class="btn" type="button" data-close>Abbrechen</button><button class="btn p" type="submit">OK</button></div></form>`,
+      o => {
+        o.querySelector("#pf").addEventListener("submit", ev => { ev.preventDefault(); const v = o.querySelector("#pv").value.trim(); if (!v) return; closeDialog(); res(v); });
+        o.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => res(null)));
+      });
+  });
+}
+
+function genPassword(len, sym) {
+  const sets = ["ABCDEFGHJKLMNPQRSTUVWXYZ", "abcdefghijkmnopqrstuvwxyz", "23456789"];
+  if (sym) sets.push("!#$%&*+-=?@_");
+  const all = sets.join("");
+  const rnd = n => { const a = new Uint32Array(1); const lim = Math.floor(0x100000000 / n) * n; let x; do { crypto.getRandomValues(a); x = a[0]; } while (x >= lim); return x % n; };
+  let out;
+  do {
+    out = ""; for (let i = 0; i < len; i++) out += all[rnd(all.length)];
+  } while (!sets.every(s => [...out].some(c => s.includes(c))));
+  return out;
+}
+
+function entryDialog(entry) {
+  const d = S.data, isNew = !entry.id;
+  const cats = d.categories;
+  if (!cats.length) { toast("Bitte zuerst eine Kategorie anlegen."); return; }
+  const catId = entry.categoryId || (S.catId !== "all" && cats.some(c => c.id === S.catId) ? S.catId : cats[0].id);
+  dialog(`<h2>${isNew ? "Neuer Eintrag" : "Eintrag bearbeiten"}</h2>
+    <form id="ef" class="stack" autocomplete="off">
+      <div><label class="lbl" for="e-title">Titel</label><input id="e-title" class="field" value="${esc(entry.title || "")}" placeholder="z.B. Router, E-Mail, E-Banking" autofocus></div>
+      <div><label class="lbl" for="e-cat">Kategorie</label><select id="e-cat" class="field">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === catId ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></div>
+      ${allDevices().length ? `<div><div class="lbl">Gehört zu Geräten</div><div class="devlist row" style="gap:6px 16px">${allDevices().map(dv => `<label class="devopt"><input type="checkbox" class="e-dev" value="${esc(dv)}" ${hasDev(entry, dv) ? "checked" : ""}> ${I.pcSmall} ${esc(dv)}</label>`).join("")}</div></div>` : ""}
+      <div><label class="lbl" for="e-user">Benutzername</label><input id="e-user" class="field" value="${esc(entry.userName || "")}"></div>
+      <div><label class="lbl" for="e-pw">Passwort</label>
+        <div class="pwfield"><input id="e-pw" class="field mono" type="password" value="${esc(entry.password || "")}">
+        <button class="btn" type="button" id="e-show">Anzeigen</button></div>
+        <div class="row small" style="margin-top:8px"><button class="btn g" type="button" id="e-gen">Passwort erzeugen</button>
+          <label class="row" style="gap:6px">Länge <input type="range" id="e-len" min="12" max="40" value="20" style="accent-color:var(--mag-btn)"><span id="e-lenv">20</span></label>
+          <label class="row" style="gap:6px"><input type="checkbox" id="e-sym" checked style="accent-color:var(--mag-btn)"> Sonderzeichen</label></div>
+      </div>
+      <div><label class="lbl" for="e-url">Adresse / URL</label><input id="e-url" class="field" value="${esc(entry.url || "")}" placeholder="z.B. 192.168.1.1 oder https://…"></div>
+      <div><label class="lbl" for="e-notes">Notizen</label><textarea id="e-notes" class="field" rows="3">${esc(entry.notes || "")}</textarea></div>
+      <div id="dlg-msg"></div>
+      <div class="acts">${isNew ? "" : '<button class="btn danger" type="button" id="e-del" style="margin-right:auto">Löschen</button>'}
+        <button class="btn" type="button" data-close>Abbrechen</button><button class="btn p" type="submit">Speichern</button></div>
+    </form>`, o => {
+      const pw = o.querySelector("#e-pw");
+      o.querySelector("#e-show").addEventListener("click", ev => { const t = pw.type === "password"; pw.type = t ? "text" : "password"; ev.target.textContent = t ? "Verbergen" : "Anzeigen"; });
+      const len = o.querySelector("#e-len");
+      len.addEventListener("input", () => o.querySelector("#e-lenv").textContent = len.value);
+      o.querySelector("#e-gen").addEventListener("click", () => { pw.value = genPassword(+len.value, o.querySelector("#e-sym").checked); pw.type = "text"; o.querySelector("#e-show").textContent = "Verbergen"; });
+      o.querySelector("#ef").addEventListener("submit", async ev => {
+        ev.preventDefault();
+        const e = { id: entry.id || "", categoryId: o.querySelector("#e-cat").value, title: o.querySelector("#e-title").value, userName: o.querySelector("#e-user").value,
+          password: pw.value, url: o.querySelector("#e-url").value, notes: o.querySelector("#e-notes").value, devices: [...o.querySelectorAll(".e-dev:checked")].map(i => i.value), modified: "" };
+        try { const r = await api.saveEntry(e); S.data = r.data; closeDialog(); toast("Gespeichert."); render(); }
+        catch (err) { dlgMsg(errText(err)); }
+      });
+      const del = o.querySelector("#e-del");
+      if (del) del.addEventListener("click", async () => {
+        if (!await confirmDlg("Eintrag löschen?", "«" + esc(entry.title) + "» wird endgültig gelöscht.", "Löschen", true)) { entryDialog(entry); return; }
+        try { S.data = await api.deleteEntry(entry.id); S.shown.delete(entry.id); toast("Gelöscht."); render(); } catch (err) { toast(errText(err)); }
+      });
+    });
+}
+
+function catManageDialog() {
+  const draw = o => {
+    const list = S.data.categories.filter(c => !c.device && !c.root);
+    o.querySelector("#cm-list").innerHTML = list.map(c => `<div class="catrow" data-id="${esc(c.id)}">
+        <input class="field" value="${esc(c.name.split(" / ").pop())}" aria-label="Name der Kategorie" style="flex:1">
+        <span class="small muted" style="width:76px;text-align:right">${c.count} Eintr${c.count === 1 ? "ag" : "äge"}</span>
+        <button class="cbtn" data-cm="del" title="${c.count ? "Erst leeren, dann löschen" : "Löschen"}" aria-label="Löschen" ${c.count ? "disabled style=\"opacity:.35\"" : ""}>${I.trash}</button></div>`).join("");
+    o.querySelectorAll(".catrow input").forEach(inp => inp.addEventListener("change", async () => {
+      const id = inp.closest(".catrow").dataset.id;
+      try { S.data = await api.renameCategory(id, inp.value); dlgMsg(""); toast("Umbenannt."); } catch (e) { dlgMsg(errText(e)); }
+    }));
+    o.querySelectorAll('[data-cm="del"]').forEach(b => b.addEventListener("click", async () => {
+      const id = b.closest(".catrow").dataset.id;
+      try { S.data = await api.deleteCategory(id); if (S.catId === id) S.catId = "all"; draw(o); } catch (e) { dlgMsg(errText(e)); }
+    }));
+  };
+  dialog(`<h2>Kategorien bearbeiten</h2>
+    <div class="small muted">Namen direkt ändern. Leere Kategorien lassen sich löschen. Geräte werden pro Eintrag in der Spalte «Kategorie · Geräte» angekreuzt.</div>
+    <div id="cm-list" class="stack" style="gap:8px"></div>
+    <form id="cm-add" class="catrow" style="margin-top:6px"><input id="cm-new" class="field" placeholder="Neue Kategorie, z.B. Banking, Lieferanten, Kamera …" style="flex:1" aria-label="Neue Kategorie"><button class="btn p" type="submit">${I.plus} Hinzufügen</button></form>
+    <div id="dlg-msg"></div>
+    <div class="acts"><button class="btn p" data-close id="cm-done">Fertig</button></div>`, o => {
+    draw(o);
+    o.querySelector("#cm-add").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const n = o.querySelector("#cm-new").value.trim(); if (!n) return;
+      try { const r = await api.addCategory(n); S.data = r.data; o.querySelector("#cm-new").value = ""; dlgMsg(""); draw(o); o.querySelector("#cm-new").focus(); } catch (e) { dlgMsg(errText(e)); }
+    });
+    o.querySelector("#cm-done").addEventListener("click", () => rerenderContent());
+  });
+  const ov = $("#dlg"); if (ov) ov.addEventListener("mousedown", ev => { if (ev.target === ov) rerenderContent(); });
+}
+
+function changeMasterDialog() {
+  dialog(`<h2>Master-Passwort ändern</h2><form id="cf" class="stack">
+    <div><label class="lbl" for="c-old">Bisheriges Passwort</label><input id="c-old" class="field" type="password" autofocus></div>
+    <div><label class="lbl" for="c-new">Neues Passwort</label><input id="c-new" class="field" type="password"></div>
+    <div><label class="lbl" for="c-rep">Neues Passwort wiederholen</label><input id="c-rep" class="field" type="password"></div>
+    <div class="small muted">Der ausgedruckte Wiederherstellungsschlüssel bleibt gültig.</div>
+    <div id="dlg-msg"></div>
+    <div class="acts"><button class="btn" type="button" data-close>Abbrechen</button><button class="btn p" type="submit">Ändern</button></div></form>`, o => {
+    o.querySelector("#cf").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const a = o.querySelector("#c-new").value;
+      if (a !== o.querySelector("#c-rep").value) return dlgMsg("Die neuen Passwörter stimmen nicht überein.");
+      try { await run("Wird gespeichert …", () => api.changeMaster(o.querySelector("#c-old").value, a)); closeDialog(); toast("Master-Passwort geändert."); }
+      catch (err) { dlgMsg(errText(err)); }
+    });
+  });
+}
+
+function newRecDialog() {
+  dialog(`<h2>Neuer Wiederherstellungsschlüssel</h2><form id="nf" class="stack">
+    <div class="warn">Der bisherige ausgedruckte Schlüssel wird damit ungültig.</div>
+    <div><label class="lbl" for="n-pw">Master-Passwort zur Bestätigung</label><input id="n-pw" class="field" type="password" autofocus></div>
+    <div id="dlg-msg"></div>
+    <div class="acts"><button class="btn" type="button" data-close>Abbrechen</button><button class="btn p" type="submit">Erzeugen</button></div></form>`, o => {
+    o.querySelector("#nf").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      try {
+        const key = await run("Wird gespeichert …", () => api.newRecoveryKey(o.querySelector("#n-pw").value));
+        dialog(`<h2>Ihr neuer Wiederherstellungsschlüssel</h2><div class="keybox"><div class="key mono">${esc(key)}</div>
+          <div class="small">Bitte ausdrucken und sicher aufbewahren, nicht zusammen mit dem Stick.</div></div>
+          <div class="acts"><button class="btn" id="k-print">${I.print} Drucken</button><button class="btn p" data-close>Fertig</button></div>`,
+          o2 => o2.querySelector("#k-print").addEventListener("click", () => printKey(key)));
+      } catch (err) { dlgMsg(errText(err)); }
+    });
+  });
+}
+
+// ---------- Drucken ----------
+function printPCs(pcs) {
+  const secs = S.data.sections, known = knownKeys();
+  const now = new Date();
+  const stamp = now.toLocaleDateString("de-CH") + " " + now.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit" });
+  // Fusszeile links pro Gerät: «Gedruckt … · erfasst am …» (benannte Seiten, damit «Alle drucken» stimmt)
+  const css = pcs.map((pc, i) => `@page pc${i}{@bottom-left{content:"${cssStr("Gedruckt " + stamp + (fieldVal(pc, "Erfasst am") ? " · erfasst am " + fieldVal(pc, "Erfasst am") : ""))}"}}`).join("\n");
+  $("#print").innerHTML = `<style>${css}</style>` + pcs.map((pc, i) => {
+    const block = (title, rows) => rows.length ? `<div class="pr-sec"><h2>${esc(title)}</h2><table>${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table></div>` : "";
+    let html = `<div class="pr-page" style="page:pc${i}">${prHead()}<div class="pr-title">${esc(pc.name)}</div>`;
+    // gleiche Reihenfolge wie in der Ansicht, eine Spalte
+    ["left", "right"].forEach(c => secs.filter(s => s.column === c).forEach(s => { html += block(s.title, s.keys.filter(k => k !== WIFI_PW).map(k => [k, fieldVal(pc, k)]).filter(r => r[1])); }));
+    html += block("Weitere Felder", pc.fields.filter(f => !known.has(f.key) && f.value).map(f => [f.key, f.value]));
+    if (pc.notes) html += `<div class="pr-sec"><h2>Notizen</h2><div class="pr-notes">${esc(pc.notes)}</div></div>`;
+    const linked = S.data.entries.filter(e => hasDev(e, pc.name)).sort((a, b) => a.title.localeCompare(b.title, "de"));
+    if (linked.length) html += `<div class="pr-sec pr-pw"><h2>Zugehörige Passwörter <span style="color:#555;font-weight:400;font-size:9pt">· vertraulich aufbewahren</span></h2><table><tr><th>Bezeichnung</th><th>Benutzer</th><th>Passwort</th><th>Notizen</th></tr>${linked.map(e =>
+      `<tr><td>${esc(e.title)}</td><td>${esc(e.userName)}</td><td class="pr-mono">${esc(e.password)}</td><td style="white-space:pre-line">${esc(e.notes)}</td></tr>`).join("")}</table></div>`;
+    html += `</div>`;
+    return html;
+  }).join("");
+  setTimeout(() => window.print(), 50);
+}
+function cssStr(t) { return String(t).replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, " "); }
+function prHead() {
+  if (!P) return `<div class="pr-head"><div class="pr-addr"><b>${esc(appTitle())}</b></div><img src="${logo()}" alt=""></div>`;
+  const l2 = [P.strasse, P.ort].filter(Boolean).map(esc).join(" · "), l3 = [P.tel, P.mail, P.web].filter(Boolean).map(esc).join(" · ");
+  return `<div class="pr-head"><div class="pr-addr"><b>${esc(P.firma)}</b>${l2 ? "<br>" + l2 : ""}${l3 ? "<br>" + l3 : ""}</div><img src="${logo()}" alt=""></div>`;
+}
+function printKey(key) {
+  const d = new Date().toLocaleDateString("de-CH");
+  $("#print").innerHTML = `<style>@page{@bottom-left{content:"Erstellt am ${d}"}}</style><div class="pr-page">${prHead()}<div class="pr-title">Wiederherstellungsschlüssel</div>
+    <p>Mit diesem Schlüssel öffnen Sie Ihre Daten, falls Sie das Master-Passwort vergessen haben: In der App auf «Passwort vergessen?» klicken und den Schlüssel eingeben.</p>
+    <div class="pr-key">${esc(key)}</div>
+    <p><b>Bitte sicher aufbewahren</b>, zum Beispiel im Tresor oder bei wichtigen Unterlagen, aber <b>nicht zusammen mit dem USB-Stick</b>. Wer diesen Schlüssel und den Stick hat, kann alle Passwörter lesen.</p>
+    <p>Erstellt am ${new Date().toLocaleDateString("de-CH")}</p></div>`;
+  setTimeout(() => window.print(), 50);
+}
+
+// ---------- Ereignisse ----------
+function bind() {
+  const on = (sel, ev, fn) => { const el = $(sel); if (el) el.addEventListener(ev, fn); };
+  const msg = t => { const m = $("#msg"); if (m) m.innerHTML = t ? `<div class="err">${esc(t)}</div>` : ""; };
+
+  on("#f-new", "submit", async ev => {
+    ev.preventDefault();
+    const pw = $("#pw").value;
+    if (pw !== $("#pw2").value) return msg("Die beiden Passwörter stimmen nicht überein.");
+    try { await run("Tresor wird angelegt …", () => api.create(pw, false)); S.view = "home"; await refresh(); }
+    catch (e) { msg(errText(e)); }
+  });
+  on("#f-login", "submit", async ev => {
+    ev.preventDefault();
+    const pw = $("#pw").value; if (!pw) return;
+    try { await run("Wird entsperrt …", () => api.unlock(pw)); S.view = "home"; S.pcId = null; S.catId = "all"; S.q = ""; await refresh(); }
+    catch (e) { msg(errText(e)); const f = $("#pw"); f.value = ""; f.focus(); }
+  });
+  on("#f-rec", "submit", async ev => {
+    ev.preventDefault();
+    try { await run("Wird geprüft …", () => api.recover($("#rk").value)); S.loginMode = "pw"; await refresh(); }
+    catch (e) { msg(errText(e)); }
+  });
+  on("#np1", "input", updateMeter);
+  on("#f-setpw", "submit", async ev => {
+    ev.preventDefault();
+    const a = $("#np1").value, b = $("#np2").value;
+    if (a.length < 6) return msg("Das Passwort muss mindestens 6 Zeichen lang sein.");
+    if (a !== b) return msg("Die beiden Passwörter stimmen nicht überein.");
+    const ck = $("#ck"); if (ck && !ck.checked) return msg("Bitte bestätigen, dass Sie den Wiederherstellungsschlüssel ausgedruckt haben.");
+    try { await run("Wird verschlüsselt und gespeichert …", () => api.setMaster(a)); S.view = "home"; S.pcId = null; await refresh(); toast("Master-Passwort gespeichert. Nur Sie haben jetzt Zugriff."); }
+    catch (e) { msg(errText(e)); }
+  });
+  bindSearch();
+  bindGrid();
+  on("#s-lock", "change", ev => { setLockMin(+ev.target.value); toast("Gespeichert."); });
+  bindActs(document);
+}
+
+// Suchfeld: Liste neu aufbauen, Fokus und Cursor behalten
+function bindSearch() {
+  const s = $("#search"); if (!s) return;
+  s.addEventListener("input", async ev => {
+    S.q = ev.target.value; const pos = ev.target.selectionStart;
+    await settleGrid();
+    if (S.q !== ev.target.value) return;
+    $("#content").innerHTML = viewPw(); bindActs($("#content")); bindSearch(); bindGrid();
+    const n = $("#search"); n.focus(); n.setSelectionRange(pos, pos);
+  });
+}
+
+function bindActs(root) {
+  root.querySelectorAll("[data-act]").forEach(el => el.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); act(el.dataset.act, el.dataset.id, el); }));
+}
+
+async function act(a, id, el) {
+  if (a !== "row-add" && $("#gbody")) await settleGrid();
+  const d = S.data;
+  try {
+    switch (a) {
+      case "login-rec": S.loginMode = "rec"; return render();
+      case "login-pw": S.loginMode = "pw"; return render();
+      case "print-key": return printKey(S.status.recoveryKey);
+      case "lock": await api.lock(); return refresh();
+      case "quit": await api.quit(); return;
+      case "new-self": await run("Tresor wird angelegt …", () => api.create("", true)); return refresh();
+      case "partner-edit": return partnerDialog();
+      case "upd-check": {
+        try { S.update = await run("Suche nach Updates …", () => api.checkUpdate()); } catch (e) { S.update = { error: errText(e) }; }
+        const box = $("#upd"); if (box) box.innerHTML = updBox(); return;
+      }
+      case "upd-install": {
+        if (!await confirmDlg("Jetzt aktualisieren?", `Version ${esc(S.update.latest)} wird geladen und geprüft. Danach startet die App neu. Ihre Daten werden vorher gesichert und nicht verändert.`, "Aktualisieren")) return;
+        await run("Update wird geladen und geprüft …", () => api.installUpdate());
+        return;
+      }
+      case "prepare-stick": return prepareStick();
+      case "go": S.view = id; S.editPc = null; if (id === "pw") { S.q = ""; S.catId = "all"; S.devF = ""; S.secF = ""; } window.scrollTo(0, 0); return render();
+      case "url": return api.openURL(id);
+      case "abof": S.aboF = id; return rerenderContent();
+      case "abo-new": return aboDialog({}, true);
+      case "abo-edit": { const en = d.entries.find(e => e.id === id); if (en) aboDialog(en, false); return; }
+      case "abo-print": return printAbosDialog();
+      case "abo-login": { const en = d.entries.find(e => e.id === id); S.view = "pw"; S.catId = "all"; S.devF = ""; S.secF = ""; S.q = en ? en.title : ""; return render(); }
+      case "help-jump": { const el = document.getElementById("h-" + id); if (el) { el.open = true; el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
+      case "pc": S.view = "pc"; S.pcId = id; S.editPc = null; window.scrollTo(0, 0); return render();
+      case "cat": S.view = "pw"; S.catId = id; S.q = ""; S.editPc = null; return render();
+      case "capture": {
+        const r = await run("Dieser PC wird ausgelesen … Das dauert etwa 10 bis 30 Sekunden.", () => api.capturePC());
+        S.data = r.data; S.view = "pc"; S.pcId = r.id; S.editPc = null; render();
+        return toast((r.created ? "Dieser PC wurde erfasst: " + r.name + "." : "Seriennummer bekannt: " + r.name + " wurde aktualisiert. Ergänzungen bleiben erhalten.")
+          + (r.wifi ? " Das WLAN «" + r.wifi + "» wurde unter Passwörter abgelegt." : ""));
+      }
+      case "pc-edit": { const pc = curPC(); S.editPc = JSON.parse(JSON.stringify(pc)); return render(); }
+      case "pc-cancel": S.editPc = null; return render();
+      case "own-add": { const w = document.createElement("div"); w.innerHTML = ownRow("", ""); const r = w.firstChild; $("#own").appendChild(r); bindActs(r); r.querySelector(".own-k").focus(); return; }
+      case "own-del": return el.closest(".own").remove();
+      case "pc-save": {
+        let pc; try { pc = collectPCEdit(); } catch (e) { $("#msg").innerHTML = `<div class="err">${esc(e)}</div>`; return; }
+        if (!pc.name) { $("#msg").innerHTML = '<div class="err">Der PC-Name darf nicht leer sein.</div>'; return; }
+        S.data = await api.savePC(pc); S.editPc = null; render(); return toast("Gespeichert.");
+      }
+      case "pc-delete": {
+        const pc = curPC();
+        if (!await confirmDlg("PC löschen?", "Das Datenblatt «" + esc(pc.name) + "» wird gelöscht. Passwörter bleiben erhalten.", "Löschen", true)) return;
+        S.data = await api.deletePC(pc.id); S.editPc = null; S.pcId = null; S.view = "devices"; render(); return toast("Gerät gelöscht.");
+      }
+      case "pc-print": return printPCs([curPC()]);
+      case "print-all": return printPCs(d.pcs);
+      case "entry-new": return entryDialog({});
+      case "row-add": return addRow();
+      case "import": return importDialog("");
+      case "sort": { const k = id; S.sort = S.sort && S.sort.k === k ? { k, dir: -S.sort.dir } : { k, dir: 1 }; return rerenderContent(); }
+      case "entry-new-pc": { const pc = curPC(); const c = d.categories.find(c => /windows/i.test(c.name)); return entryDialog({ title: "Windows-Anmeldung", categoryId: c ? c.id : "", devices: [pc.name] }); }
+      case "devf": S.view = "pw"; S.devF = id || ""; S.q = ""; return render();
+      case "secf": S.view = "pw"; S.secF = S.secF === id ? "" : (id || ""); S.q = ""; return render();
+      case "cat-manage": return catManageDialog();
+      case "entry-edit": return entryDialog(d.entries.find(e => e.id === id));
+      case "pw-show": S.shown.has(id) ? S.shown.delete(id) : S.shown.add(id); return rerenderContent();
+      case "pw-copy": { const e = d.entries.find(e => e.id === id); await api.copy(e.password); return toast("Passwort kopiert. Die Zwischenablage wird in 30 Sekunden geleert."); }
+      case "user-copy": { const e = d.entries.find(e => e.id === id); await api.copy(e.userName); return toast("Benutzername kopiert."); }
+      case "cat-add": {
+        const n = await promptDlg("Neue Kategorie", "Name", ""); if (!n) return;
+        const r = await api.addCategory(n); S.data = r.data; S.view = "pw"; S.catId = r.id; S.q = ""; return render();
+      }
+      case "cat-rename": {
+        const c = d.categories.find(c => c.id === S.catId); const n = await promptDlg("Kategorie umbenennen", "Name", c.name.split(" / ").pop()); if (!n) return;
+        S.data = await api.renameCategory(c.id, n); return render();
+      }
+      case "cat-delete": {
+        const c = d.categories.find(c => c.id === S.catId);
+        if (!await confirmDlg("Kategorie löschen?", "«" + esc(c.name) + "» wird gelöscht. Das geht nur, wenn sie leer ist.", "Löschen", true)) return;
+        S.data = await api.deleteCategory(c.id); S.catId = "all"; return render();
+      }
+      case "handover": {
+        const ok = await confirmDlg("An den Kunden übergeben?",
+          `Beim nächsten Start muss der Kunde ein eigenes Master-Passwort festlegen. Ihr Übergabe-Passwort funktioniert danach nicht mehr und der Knopf «Passwort setzen» verschwindet.
+           <div class="info" style="margin-top:12px">Erfasst: <b>${d.pcs.length} PC${d.pcs.length === 1 ? "" : "s"} · ${d.entries.length} Passwörter</b>. Dieser Schritt lässt sich nicht rückgängig machen.</div>`, "Jetzt übergeben");
+        if (!ok) return;
+        await run("Wird gespeichert …", () => api.handover());
+        return refresh();
+      }
+      case "change-master": return changeMasterDialog();
+      case "new-rec": return newRecDialog();
+      case "open-folder": return api.openFolder();
+      case "backup": { const n = await api.backup(); return toast("Sicherung erstellt: Backup\\" + n); }
+      case "backup-to": { const p = await api.backupTo(); if (p) toast("Sicherung gespeichert: " + p); return; }
+    }
+  } catch (e) { toast(errText(e)); }
+}
+
+function rerenderContent() {
+  const c = $("#content"); if (!c) return render();
+  closePopover();
+  c.innerHTML = viewContent();
+  bindActs(c); bindSearch(); bindGrid();
+}
+
+// ---------- Automatische Sperre ----------
+function getLockMin() { try { const v = +localStorage.getItem("st-lock-min"); return v > 0 ? v : 5; } catch (e) { return 5; } }
+function setLockMin(v) { try { localStorage.setItem("st-lock-min", String(v)); } catch (e) {} }
+let lastActive = Date.now();
+["mousemove", "mousedown", "keydown", "wheel", "touchstart"].forEach(t => window.addEventListener(t, () => { lastActive = Date.now(); }, { passive: true }));
+setInterval(async () => {
+  if (!S.status || S.status.state !== "open") return;
+  if (Date.now() - lastActive > getLockMin() * 60000) {
+    lastActive = Date.now();
+    try { await settleGrid(); } catch (e) {}
+    try { await api.lock(); } catch (e) {}
+    S.loginMode = "pw"; await refresh(); toast("Automatisch gesperrt.");
+  }
+}, 10000);
+
+document.addEventListener("keydown", ev => { if (ev.key === "Escape") { closePopover(); closeDialog(); } });
+
+window.addEventListener("DOMContentLoaded", () => { render(); refresh(); });
+if (document.readyState !== "loading") { render(); refresh(); }
+</script>
+</body>
+</html>

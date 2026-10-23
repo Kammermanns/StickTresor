@@ -1,0 +1,8 @@
+*.exe
+*.exe.old
+daten.kdbx
+wiederherstellung.kdbx
+uebergabe.status
+partner.json
+Backup/
+*.tmp
