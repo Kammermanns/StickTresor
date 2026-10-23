@@ -22,7 +22,7 @@ import (
 )
 
 // Version wird beim Bauen aus dem Git-Tag gesetzt (-ldflags "-X .../internal/app.Version=4.1.0").
-var Version = "4.1.0"
+var Version = "4.1.1"
 
 // handoverFile merkt sich ohne Passwort, in welchem Übergabe-Schritt der Stick ist:
 //

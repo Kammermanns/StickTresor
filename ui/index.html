@@ -2243,7 +2243,7 @@ async function act(a, id, el) {
       case "nl-del": { const doc = nlDoc(); doc.rows = doc.rows.filter(r => r.id !== id); nlSaveDoc(); return rerenderContent(); }
       case "upd-check": {
         try { S.update = await run("Suche nach Updates …", () => api.checkUpdate()); } catch (e) { S.update = { error: errText(e) }; }
-        const box = $("#upd"); if (box) box.innerHTML = updBox(); return;
+        const box = $("#upd"); if (box) { box.innerHTML = updBox(); bindActs(box); } return;
       }
       case "upd-install": {
         if (!await confirmDlg("Jetzt aktualisieren?", `Version ${esc(S.update.latest)} wird geladen und geprüft. Danach startet die App neu. Ihre Daten werden vorher gesichert und nicht verändert.`, "Aktualisieren")) return;
