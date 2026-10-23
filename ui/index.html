@@ -107,6 +107,7 @@ section.box h2{font-size:14px;font-weight:700}
 .pw .secret{flex:0 1 210px;min-width:120px;overflow-wrap:anywhere}
 .pw .acts{display:flex;gap:2px;flex-wrap:wrap}
 .emptybox{padding:28px 18px;text-align:center;color:var(--muted)}
+footer.foot a{color:inherit}
 footer.foot{background:#fff;border-top:1px solid var(--line);padding:9px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 footer.foot img{height:20px}
 .legend{display:flex;gap:16px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
@@ -333,6 +334,9 @@ const DEFAULT_NAME = "Stick[T]resor", DEFAULT_COLOR = "#1F6FB2";
 function brandOf(name) { return esc(name || DEFAULT_NAME).replace(/\[([^\]]*)\]/g, '<span class="m">$1</span>'); }
 function brand() { return brandOf(P && P.appName); }
 function appTitle() { return String((P && P.appName) || DEFAULT_NAME).replace(/[\[\]]/g, ""); }
+// Urheber des Programms (bleibt auch bei Firmenangaben sichtbar)
+const AUTHOR = "Stefan Kammermann", REPO_URL = "https://github.com/Kammermanns/StickTresor";
+function credit() { return `StickTresor von <a href="#" data-act="url" data-id="${REPO_URL}">${AUTHOR}</a>`; }
 // Neutrales Logo (Schild mit Schlüsselloch) in der Akzentfarbe
 function defaultLogo(color) {
   const c = color || DEFAULT_COLOR;
@@ -449,7 +453,7 @@ function render() {
 // ---------- Bildschirm: neuer Tresor ----------
 function viewNew() {
   const s = S.status;
-  const foot = `<div class="cardfoot"><span>${esc(s.file)}</span><span>Version ${esc(s.version)}</span></div>`;
+  const foot = `<div class="cardfoot"><span>${esc(s.file)}</span><span>Version ${esc(s.version)} · ${credit()}</span></div>`;
   const ro = s.writable ? "" : '<div class="err">In diesen Ordner kann nicht geschrieben werden. Ist der Stick schreibgeschützt?</div>';
   if (!P) {
     return `<div class="center"><div class="card wide">
@@ -496,7 +500,7 @@ function infoCard(p, preview) {
         ${cont ? `<div class="stack" style="gap:2px">${cont}</div>` : ""}
       </div>
       ${p.helpdesk || p.supportInfo ? `<div class="helpdesk">
-        ${p.helpdesk ? `<div class="eyebrow" style="color:var(--mag-deep)">Helpdesk</div><div class="hdnum">${esc(p.helpdesk)}</div>` : ""}
+        ${p.helpdesk ? `<div class="eyebrow" style="color:var(--mag-deep)">Support</div><div class="hdnum">${esc(p.helpdesk)}</div>` : ""}
         ${p.helpdeskInfo ? `<div class="small" style="color:#4A4450">${esc(p.helpdeskInfo)}</div>` : ""}
         ${p.supportInfo ? `<div class="small" style="color:#4A4450">${esc(p.supportInfo)}</div>` : ""}
       </div>` : ""}
@@ -504,13 +508,13 @@ function infoCard(p, preview) {
 }
 function supportLine(p) {
   if (!p) return "";
-  return [p.firma, p.tel, p.mail, p.helpdesk ? "Helpdesk " + p.helpdesk : ""].filter(Boolean).map(esc).join(" · ");
+  return [p.firma, p.tel, p.mail, p.helpdesk ? "Support " + p.helpdesk : ""].filter(Boolean).map(esc).join(" · ");
 }
 const PF = [
   ["firma", "Firma *", "z.B. Muster Informatik GmbH"], ["strasse", "Strasse", ""], ["ort", "PLZ und Ort", ""],
   ["tel", "Telefon", ""], ["mail", "E-Mail", ""], ["web", "Webseite", "www.beispiel.ch"],
-  ["supportTitel", "Überschrift der Kontaktkarte", "Ihr IT-Partner"], ["helpdesk", "Helpdesk-Telefon", "z.B. 0900 …"],
-  ["helpdeskInfo", "Helpdesk-Tarif / Hinweis", "z.B. ab Festnetz CHF 2.50/Min."], ["supportInfo", "Weitere Support-Infos", "z.B. Mo–Fr 8–12 und 13.30–17 Uhr"]
+  ["supportTitel", "Überschrift der Kontaktkarte", "Ihr IT-Partner"], ["helpdesk", "Support-Telefon", "z.B. 0900 …"],
+  ["helpdeskInfo", "Support-Tarif / Hinweis", "z.B. ab Festnetz CHF 2.50/Min."], ["supportInfo", "Weitere Support-Infos", "z.B. Mo–Fr 8–12 und 13.30–17 Uhr"]
 ];
 function partnerDialog() {
   const cur = P ? { ...P } : { appName: "", color: DEFAULT_COLOR, supportTitel: "Ihr IT-Partner" };
@@ -758,7 +762,7 @@ function viewMain() {
     <footer class="foot">
       ${P ? `<img src="${logo()}" alt=""><span>${supportLine(P)}</span>` : ""}
       <span class="spacer"></span>
-      <span>${d.lastSaved ? "Gespeichert um " + esc(d.lastSaved) + " · " : ""}KeePass-Format (KDBX 4) · <span class="brand">${brand()}</span> ${esc(S.status.version)}</span>
+      <span>${d.lastSaved ? "Gespeichert um " + esc(d.lastSaved) + " · " : ""}KeePass-Format (KDBX 4) · <span class="brand">${brand()}</span> ${esc(S.status.version)} · ${credit()}</span>
     </footer>
   </div>`;
 }
@@ -1564,8 +1568,8 @@ function viewHelp() {
   ${hasSupport(P) ? sec("support", "Hilfe von " + esc(P.firma), `
     <p><b>${esc(P.firma)}</b>${[P.strasse, P.ort].filter(Boolean).map(x => " · " + esc(x)).join("")}<br>
     ${P.tel ? "Telefon " + esc(P.tel) : ""}${P.mail ? ` · <a href="#" data-act="url" data-id="mailto:${esc(P.mail)}">${esc(P.mail)}</a>` : ""}${P.web ? ` · <a href="#" data-act="url" data-id="https://${esc(P.web)}">${esc(P.web)}</a>` : ""}
-    ${P.helpdesk ? `<br>Helpdesk <b>${esc(P.helpdesk)}</b>${P.helpdeskInfo ? " (" + esc(P.helpdeskInfo) + ")" : ""}` : ""}${P.supportInfo ? "<br>" + esc(P.supportInfo) : ""}</p>`) : ""}
-  <p class="small muted">${esc(appTitle())} · Version ${esc(S.status.version)} · Open Source</p>
+    ${P.helpdesk ? `<br>Support <b>${esc(P.helpdesk)}</b>${P.helpdeskInfo ? " (" + esc(P.helpdeskInfo) + ")" : ""}` : ""}${P.supportInfo ? "<br>" + esc(P.supportInfo) : ""}</p>`) : ""}
+  <p class="small muted">${esc(appTitle())} · Version ${esc(S.status.version)} · ${credit()} · Open Source (MIT-Lizenz)</p>
   </div>`;
 }
 
@@ -1613,8 +1617,8 @@ function viewSettings() {
     <section class="box"><h2 style="font-size:15px">Hilfe &amp; Support</h2>
       ${P ? `<div>${[P.firma, P.strasse, P.ort].filter(Boolean).map(esc).join(" · ")}</div>
       <div>${[P.tel ? esc(P.tel) : "", P.mail ? `<a href="#" data-act="url" data-id="mailto:${esc(P.mail)}">${esc(P.mail)}</a>` : "", P.web ? `<a href="#" data-act="url" data-id="https://${esc(P.web)}">${esc(P.web)}</a>` : ""].filter(Boolean).join(" · ")}</div>
-      ${P.helpdesk ? `<div>Helpdesk ${esc(P.helpdesk)}${P.helpdeskInfo ? " · " + esc(P.helpdeskInfo) : ""}</div>` : ""}` : ""}
-      <div class="small muted">${esc(appTitle())} · Version ${esc(s.version)} · Open Source (MIT-Lizenz)</div>
+      ${P.helpdesk ? `<div>Support ${esc(P.helpdesk)}${P.helpdeskInfo ? " · " + esc(P.helpdeskInfo) : ""}</div>` : ""}` : ""}
+      <div class="small muted">${esc(appTitle())} · Version ${esc(s.version)} · ${credit()} · Open Source (MIT-Lizenz)</div>
     </section>
   </div>`;
 }
