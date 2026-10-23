@@ -133,7 +133,8 @@ main.content{flex:1;width:100%;max-width:1400px;margin:0 auto}
 .infogrid{display:flex;gap:48px;justify-content:center;flex-wrap:wrap;font-size:15px;line-height:1.6}
 .helpdesk{width:100%;background:var(--mag-softer);border:1px solid var(--mag);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;align-items:center}
 .hdnum{font-size:26px;font-weight:700;letter-spacing:.02em;color:var(--ink)}
-.tiles{width:100%;max-width:1100px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.tiles{width:100%;max-width:640px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:560px){.tiles{grid-template-columns:1fr}}
 .tile{display:flex;gap:16px;align-items:center;text-align:left;padding:22px 24px;background:#fff;border:1px solid var(--line);border-radius:14px;cursor:pointer;min-height:96px}
 .tile:hover{border-color:var(--mag);background:var(--mag-softer)}
 .tile b{display:block;font-size:18px}
@@ -338,6 +339,8 @@ table.keys td{padding:3px 14px 3px 0}
   .pr-sec td{padding:1pt 4pt 1pt 0;vertical-align:top;white-space:pre-line}
   .pr-sec td:first-child{width:30%;color:#444}
   .nl-doc .pr-sec p{margin:0 0 4pt}
+  .nl-doc .pr-sec h2,.nl-doc .pr-title{color:#000}
+  .nl-doc .nl-info td:first-child{width:42%}
   .nl-pr td{font-size:9pt}
   .nl-pr td:first-child{font-weight:600}
   .nl-pr td{overflow-wrap:anywhere}
@@ -809,9 +812,9 @@ function viewHome() {
   return `<div class="home"><div class="brand big" style="font-size:30px">${brand()}</div>
     ${infoCard(P)}
     <div class="tiles">
-      <button class="tile" data-act="go" data-id="devices"><span class="tic">${I.pcBig}</span><span><b>Geräte</b><span class="muted">${d.pcs.length} ${d.pcs.length === 1 ? "Gerät" : "Geräte"} erfasst</span></span></button>
       <button class="tile" data-act="go" data-id="abos"><span class="tic">${I.repeatBig}</span><span><b>Abos</b><span class="muted">${(() => { const n = aboEntries().filter(e => e.abo.status !== "gekündigt").length, sm = aboSums(), h = aboHints().length; return n ? `${n} aktiv · ${sm.map(x => money(x.month, x.cur)).join(" + ")}/Mt.${h ? ` · <span class="warnword">${h} demnächst fällig</span>` : ""}` : "Noch keine Abos"; })()}</span></span></button>
       <button class="tile" data-act="go" data-id="pw"><span class="tic">${I.keyBig}</span><span><b>Passwörter</b><span class="muted">${d.entries.length} ${d.entries.length === 1 ? "Eintrag" : "Einträge"}${(() => { const st = secStats(); return (st.weak ? ` · <span class="warnword">${st.weak} schwach</span>` : "") + (st.dup ? ` · <span class="warnword">${st.dup} mehrfach</span>` : ""); })()}</span></span></button>
+      <button class="tile" data-act="go" data-id="devices"><span class="tic">${I.pcBig}</span><span><b>Geräte</b><span class="muted">${d.pcs.length} ${d.pcs.length === 1 ? "Gerät" : "Geräte"} erfasst</span></span></button>
       <button class="tile" data-act="go" data-id="nachlass"><span class="tic">${I.willBig}</span><span><b>Nachlass</b><span class="muted">${(() => { const n = S.data.entries.filter(nlIncluded).length; return n ? n + " Konten für den Ausdruck" : "Digitalen Nachlass vorbereiten"; })()}</span></span></button>
     </div>
     <section class="tips">
@@ -822,7 +825,7 @@ function viewHome() {
         <li><b>Nichts Persönliches, keine Muster.</b> Keine Namen, Geburtstage, Firmennamen oder Telefonnummern und keine Folgen wie <span class="mono">123456</span>, <span class="mono">qwertz</span> oder <span class="mono">Passwort1</span>.</li>
         <li><b>Zwei-Faktor-Anmeldung einschalten,</b> wo es geht, besonders bei E-Mail, Microsoft 365 und E-Banking. Dann reicht ein gestohlenes Passwort allein nicht.</li>
         <li><b>Passwörter nur hier aufbewahren,</b> nicht auf Zetteln oder in E-Mails. Master-Passwort und Wiederherstellungsschlüssel getrennt vom Stick aufbewahren.</li>
-        <li><b>Bei Verdacht sofort ändern,</b> zum Beispiel nach einer verdächtigen E-Mail (Phishing) oder einer Meldung über ein Datenleck. Wir helfen gern.</li>
+        <li><b>Bei Verdacht sofort ändern,</b> zum Beispiel nach einer verdächtigen E-Mail (Phishing) oder einer Meldung über ein Datenleck.${P ? " " + esc(P.firma) + " hilft gern." : ""}</li>
       </ul>
       <div class="small muted">Der Sicherheitscheck unter <a href="#" data-act="go" data-id="pw">Passwörter</a> zeigt schwache und mehrfach verwendete Passwörter.</div>
     </section>
@@ -1603,7 +1606,13 @@ function nlIncluded(e) { const i = e.nachlass && e.nachlass.include; return i ==
 function pcLabel(pc) {
   const f = k => ((pc.fields || []).find(x => x.key === k) || {}).value || "";
   const m = [f("Hersteller"), f("Modell")].filter(Boolean).join(" ");
-  return { name: pc.name + (m ? " (" + m + ")" : ""), user: f("Hauptbenutzer") };
+  return { name: pc.name + (m ? " (" + m + ")" : ""), user: f("Hauptbenutzer") || pcUser(pc) };
+}
+// Benutzer eines PCs aus der Passwortliste: zuerst Windows-Anmeldungen, die dem Gerät zugeordnet sind
+function pcUser(pc) {
+  const linked = S.data.entries.filter(e => e.userName && hasDev(e, pc.name));
+  const win = linked.filter(e => /windows|anmeld|login/i.test(catName(e.categoryId) + " " + e.title));
+  return [...new Set((win.length ? win : linked).map(e => e.userName))].join(", ");
 }
 // Alle Zeilen eines Abschnitts: Passwort-Einträge, PCs, eigene Zeilen
 function nlRows(sec) {
@@ -1752,9 +1761,9 @@ function printNachlass() {
   $("#print").innerHTML = `<style>@page{@bottom-left{content:"Digitaler Nachlass${name ? " · " + cssStr(name) : ""} · Stand ${today}"}}</style><div class="pr-page nl-doc">
     <div class="pr-title" style="margin-top:0">Digitaler Nachlass${name ? " – " + esc(name) : ""}</div>
     <div class="pr-sec"><h2>Rechtliche Ermächtigung</h2><p>${esc(NL_AUTH)}</p></div>
-    <div class="pr-sec"><h2>Persönliche Angaben</h2><table>${line("Vorname", p.vorname)}${line("Nachname", p.nachname)}${line("Geburtsdatum", p.geburt)}${line("Adresse", p.adresse)}</table></div>
-    <div class="pr-sec"><h2>Vertrauensperson und Bevollmächtigung</h2><table>${line("Vorname", v.vorname)}${line("Nachname", v.nachname)}${line("Telefon / E-Mail", v.kontakt)}${line("Beziehung / Rolle", v.rolle)}</table></div>
-    <div class="pr-sec"><h2>Passwörter</h2><table>${line("Passwort-Manager", w.manager || "StickTresor (KeePass-Datei daten.kdbx auf dem USB-Stick)")}${w.stick ? line("Aufbewahrungsort USB-Stick", w.stick) : ""}${line("Aufbewahrungsort Master-Passwort", w.master)}${line("Aufbewahrungsort Wiederherstellungsschlüssel", w.rec)}${line("Aufbewahrungsort physische Zugangsdaten", w.physisch)}${line("Zugang 2FA-Gerät / Smartphone-PIN", w.zweiFA)}${w.notizen ? line("Weitere Notizen", w.notizen) : ""}</table>
+    <div class="pr-sec"><h2>Persönliche Angaben</h2><table class="nl-info">${line("Vorname", p.vorname)}${line("Nachname", p.nachname)}${line("Geburtsdatum", p.geburt)}${line("Adresse", p.adresse)}</table></div>
+    <div class="pr-sec"><h2>Vertrauensperson und Bevollmächtigung</h2><table class="nl-info">${line("Vorname", v.vorname)}${line("Nachname", v.nachname)}${line("Telefon / E-Mail", v.kontakt)}${line("Beziehung / Rolle", v.rolle)}</table></div>
+    <div class="pr-sec"><h2>Passwörter</h2><table class="nl-info">${line("Passwort-Manager", w.manager || "StickTresor (KeePass-Datei daten.kdbx auf dem USB-Stick)")}${w.stick ? line("Aufbewahrungsort USB-Stick", w.stick) : ""}${line("Aufbewahrungsort Master-Passwort", w.master)}${line("Aufbewahrungsort Wiederherstellungsschlüssel", w.rec)}${line("Aufbewahrungsort physische Zugangsdaten", w.physisch)}${line("Zugang 2FA-Gerät / Smartphone-PIN", w.zweiFA)}${w.notizen ? line("Weitere Notizen", w.notizen) : ""}</table>
       <p class="small">Die Datei daten.kdbx kann auch mit KeePass, KeePassXC (PC), KeePassDX (Android) oder Strongbox (iPhone) und dem Master-Passwort geöffnet werden.</p></div>
     ${tables}
     <div class="pr-sec nl-sign"><h2>Bestätigung und Gültigkeit</h2><p>Dieses Dokument entspricht meinem ausdrücklichen Willen bezüglich meines digitalen Nachlasses.</p>
