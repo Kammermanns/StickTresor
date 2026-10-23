@@ -17,7 +17,7 @@ Zahnrad → «Nach Updates suchen» fragt bei GitHub nach dem neuesten Release. 
 prüft die SHA-256-Prüfsumme (`StickTresor.exe.sha256` im Release) und – sobald die Versionen signiert sind – Signatur und Herausgeber,
 ersetzt die Exe auf dem Stick und startet neu. Daten und Firmenangaben bleiben unverändert, vorher wird gesichert.
 
-Neue Version veröffentlichen: Tag setzen (`git tag v4.1.0 && git push --tags`), GitHub Actions baut und veröffentlicht das Release.
+Neue Version veröffentlichen: auf GitHub unter **Releases → Draft a new release** einen Tag wie `v4.1.0` anlegen und **Publish release** drücken. GitHub Actions baut die Exe und hängt `StickTresor.exe` und `StickTresor.exe.sha256` an das Release an.
 
 ## Dateien auf dem Stick
 
