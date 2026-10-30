@@ -12,6 +12,14 @@ import (
 	"testing"
 )
 
+func TestAssetNames(t *testing.T) {
+	for _, c := range [][3]string{{"windows", "amd64", "StickTresor.exe"}, {"darwin", "arm64", "StickTresor-macos-arm64"}, {"linux", "amd64", "StickTresor-linux-amd64"}} {
+		if got := AssetFor(c[0], c[1]); got != c[2] {
+			t.Errorf("%s/%s: %s", c[0], c[1], got)
+		}
+	}
+}
+
 func TestNewer(t *testing.T) {
 	for _, c := range []struct {
 		a, b string
@@ -29,7 +37,7 @@ func server(t *testing.T, exe []byte, sha string) *httptest.Server {
 		switch r.URL.Path {
 		case "/repos/" + Repo + "/releases/latest":
 			fmt.Fprintf(w, `{"tag_name":"v4.2.0","body":"Neu: Updates","html_url":"https://github.com/x","published_at":"2026-11-01T10:00:00Z",
-			"assets":[{"name":"StickTresor.exe","browser_download_url":"%[1]s/exe","size":%[2]d},{"name":"StickTresor.exe.sha256","browser_download_url":"%[1]s/sha"}]}`, srv.URL, len(exe))
+			"assets":[{"name":"%[3]s","browser_download_url":"%[1]s/exe","size":%[2]d},{"name":"%[3]s.sha256","browser_download_url":"%[1]s/sha"}]}`, srv.URL, len(exe), AssetName)
 		case "/exe":
 			w.Write(exe)
 		case "/sha":

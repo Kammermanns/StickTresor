@@ -6,3 +6,4 @@ uebergabe.status
 partner.json
 Backup/
 *.tmp
+dist/

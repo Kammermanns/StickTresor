@@ -136,16 +136,14 @@ func (a *App) prepareTo(dir string) (PrepareResult, error) {
 	if same(dir, a.exeDir) {
 		return PrepareResult{}, errSameDir
 	}
-	exe, err := os.Executable()
+	progs, err := a.programFiles()
 	if err != nil {
 		return PrepareResult{}, err
 	}
-	if r, err := filepath.EvalSymlinks(exe); err == nil {
-		exe = r
-	}
-	dst := filepath.Join(dir, filepath.Base(exe))
-	if err := copyFile(exe, dst); err != nil {
-		return PrepareResult{}, errors.New("Das Programm konnte nicht kopiert werden (läuft es dort gerade?): " + err.Error())
+	for _, src := range progs {
+		if err := copyTree(src, filepath.Join(dir, filepath.Base(src))); err != nil {
+			return PrepareResult{}, errors.New("Das Programm konnte nicht kopiert werden (läuft es dort gerade?): " + err.Error())
+		}
 	}
 	if p := a.partnerLocked(); p != nil {
 		target := filepath.Join(dir, DataFolder)
@@ -159,5 +157,75 @@ func (a *App) prepareTo(dir string) (PrepareResult, error) {
 			return PrepareResult{}, err
 		}
 	}
-	return PrepareResult{Dir: dir, Exe: filepath.Base(dst), HasVault: vaultIn(dir)}, nil
+	names := []string{}
+	for _, p := range progs {
+		names = append(names, filepath.Base(p))
+	}
+	return PrepareResult{Dir: dir, Exe: strings.Join(names, ", "), HasVault: vaultIn(dir)}, nil
+}
+
+// programNames sind die Programmversionen, die auf einem Stick liegen können.
+var programNames = []string{"StickTresor.exe", "StickTresor.app", "StickTresor-linux-amd64", "StickTresor-linux-arm64"}
+
+// programFiles liefert alle Programmversionen neben dieser (Windows, Mac, Linux)
+// und das laufende Programm selbst.
+func (a *App) programFiles() ([]string, error) {
+	out := []string{}
+	seen := map[string]bool{}
+	addP := func(p string) {
+		if !seen[p] {
+			seen[p] = true
+			out = append(out, p)
+		}
+	}
+	for _, n := range programNames {
+		p := filepath.Join(a.exeDir, n)
+		if _, err := os.Stat(p); err == nil {
+			addP(p)
+		}
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	if r, err := filepath.EvalSymlinks(exe); err == nil {
+		exe = r
+	}
+	if i := strings.Index(exe, ".app/Contents/MacOS/"); i >= 0 {
+		addP(exe[:i+4]) // ganzes Mac-Programmpaket
+	} else {
+		addP(exe)
+	}
+	return out, nil
+}
+
+// copyTree kopiert eine Datei oder einen Ordner (z.B. StickTresor.app) mit den Dateirechten.
+func copyTree(src, dst string) error {
+	st, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	if !st.IsDir() {
+		if err := copyFile(src, dst); err != nil {
+			return err
+		}
+		return os.Chmod(dst, st.Mode().Perm()|0o600)
+	}
+	return filepath.Walk(src, func(p string, fi os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, _ := filepath.Rel(src, p)
+		t := filepath.Join(dst, rel)
+		if fi.IsDir() {
+			return os.MkdirAll(t, 0o755)
+		}
+		if fi.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+		if err := copyFile(p, t); err != nil {
+			return err
+		}
+		return os.Chmod(t, fi.Mode().Perm()|0o600)
+	})
 }

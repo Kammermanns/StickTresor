@@ -7,7 +7,7 @@
 > their customers, who then set their own master password. No telemetry, no accounts; the app only goes online when the user clicks
 > "check for updates" (GitHub Releases). Downloads: [Releases](https://github.com/Kammermanns/StickTresor/releases). License: MIT.
 
-Portable Windows-App für **PC-Datenblätter, Passwörter und Abos** – eine einzige Exe, keine Installation, läuft direkt vom USB-Stick.
+Portable App für **PC-Datenblätter, Passwörter, Abos und den digitalen Nachlass** – keine Installation, läuft direkt vom USB-Stick auf **Windows, macOS und Linux**.
 Alle Daten liegen verschlüsselt in `daten.kdbx` im offenen **KeePass-Format (KDBX 4)** und lassen sich jederzeit auch mit KeePass, KeePassXC, KeePassDX oder Strongbox öffnen.
 
 ## Für wen?
@@ -17,6 +17,25 @@ Alle Daten liegen verschlüsselt in `daten.kdbx` im offenen **KeePass-Format (KD
 
 Im Programm stehen **keine Firmendaten und keine Passwörter**. Die Angaben der IT-Firma liegen in `Daten\partner.json`
 (und geschützt im Tresor). Das Übergabe-Passwort wählt die IT-Firma selbst; es wird nirgends gespeichert.
+
+## Windows, macOS und Linux
+
+| System | Programm | Oberfläche |
+|---|---|---|
+| Windows 10/11 | `StickTresor.exe` | eigenes Fenster (WebView2) |
+| macOS 11+ (Apple Silicon und Intel) | `StickTresor.app` | Fenster im Browser (Chrome/Edge im App-Modus, sonst Safari) |
+| Linux (x86-64, ARM64) | `StickTresor-linux-amd64` / `-arm64` | Fenster im Browser (Chrome/Chromium/Edge im App-Modus, sonst Standardbrowser) |
+
+Alle Versionen verwenden denselben Ordner `Daten` – ein Stick für alle Systeme.
+
+Auf macOS und Linux startet das Programm einen lokalen Server nur auf `127.0.0.1` mit zufälligem Port. Jeder Zugriff braucht einen
+Einmal-Schlüssel, den nur das von der App geöffnete Fenster kennt; Host- und Origin-Prüfung schützen vor fremden Webseiten.
+Wird das Fenster geschlossen, beendet sich das Programm.
+
+Hinweise:
+- **macOS:** Aus dem Internet geladen, blockiert Gatekeeper die App beim ersten Start (Rechtsklick → «Öffnen»). Eine Beglaubigung durch Apple ist (noch) nicht vorhanden.
+- **Linux:** Auf FAT32-Sticks sind Programme oft nicht ausführbar; exFAT verwenden oder das Programm in den Benutzerordner kopieren.
+- **PC erfassen:** macOS über `system_profiler`, Linux über `/sys`, `/proc`, `lsblk`, `lpstat`, `nmcli`. Was ohne Administratorrechte nicht lesbar ist (z.B. die Seriennummer unter Linux), bleibt leer.
 
 ## Updates
 
@@ -33,7 +52,9 @@ Auf der obersten Ebene liegt nur das Programm, alle Daten liegen im Ordner `Date
 
 | Datei | Inhalt |
 |---|---|
-| `StickTresor.exe` | das Programm |
+| `StickTresor.exe` | das Programm für Windows |
+| `StickTresor.app` | das Programm für macOS |
+| `StickTresor-linux-amd64` | das Programm für Linux |
 | `Daten\daten.kdbx` | der verschlüsselte Tresor (KeePass-Format) |
 | `Daten\wiederherstellung.kdbx` | Kopie, mit dem Wiederherstellungsschlüssel verschlüsselt |
 | `Daten\partner.json` | Firmenangaben der IT-Firma (optional) |
@@ -44,9 +65,11 @@ Auf der obersten Ebene liegt nur das Programm, alle Daten liegen im Ordner `Date
 
 | Ordner / Datei | Inhalt |
 |---|---|
-| `main_windows.go` | Start, Fenster (WebView2), nur eine Instanz pro Ordner |
+| `main_windows.go` | Windows: Start, Fenster (WebView2), nur eine Instanz pro Ordner |
+| `main_unix.go`, `platform_unix.go` | macOS/Linux: Start, Browserfenster, Zwischenablage, Ordnerwahl |
 | `platform_windows.go` | Zwischenablage (Auto-Löschen, kein Verlauf), Ordner öffnen/wählen |
 | `internal/partner` | Firmenangaben der IT-Firma (`partner.json`) |
+| `internal/web` | Browser-Oberfläche für macOS und Linux (lokaler Server mit Schlüssel) |
 | `internal/update` | Update-Prüfung und Austausch der Exe |
 | `internal/vault` | KeePass-Datei: Lesen, Schreiben, Übergabe-Modus, Wiederherstellung |
 | `internal/capture` | PC-Erfassung per PowerShell/CIM (keine Adminrechte nötig) |
@@ -66,6 +89,8 @@ Auf der obersten Ebene liegt nur das Programm, alle Daten liegen im Ordner `Date
 ```
 go build -mod=vendor -trimpath -ldflags "-s -w -H windowsgui" -o StickTresor.exe .
 ```
+
+Alle Systeme auf einmal (inkl. `StickTresor.app`): `sh build/package.sh 4.2.0` → Ordner `dist/`.
 
 Version setzen: zusätzlich `-X github.com/Kammermanns/StickTresor/internal/app.Version=4.1.0` in `-ldflags`.
 

@@ -1,5 +1,5 @@
 # Baut und testet bei jedem Push. Wird auf GitHub ein Release veröffentlicht (Tag v*, z.B. v4.1.0),
-# hängt der Bau StickTresor.exe und StickTresor.exe.sha256 an (für die Update-Funktion der App).
+# hängt der Bau die Programme für Windows, macOS und Linux samt SHA-256 an (für die Update-Funktion der App).
 # Signiert wird mit SignPath (siehe CODE_SIGNING.md), sobald es eingerichtet ist.
 name: Build
 on:
@@ -36,20 +36,14 @@ jobs:
             -ver-major "${MA:-0}" -ver-minor "${MI:-0}" -ver-patch "${PA:-0}" -ver-build 0 \
             -product-ver-major "${MA:-0}" -product-ver-minor "${MI:-0}" -product-ver-patch "${PA:-0}" -product-ver-build 0 \
             build/versioninfo.json
-      - name: Windows-Exe bauen
-        env:
-          GOOS: windows
-          GOARCH: amd64
-          CGO_ENABLED: "0"
-        run: |
-          go build -mod=vendor -trimpath -ldflags "-s -w -H windowsgui -X github.com/Kammermanns/StickTresor/internal/app.Version=${{ steps.ver.outputs.v }}" -o StickTresor.exe .
-          sha256sum StickTresor.exe > StickTresor.exe.sha256
+      - name: Programme bauen (Windows, macOS, Linux)
+        run: sh build/package.sh "${{ steps.ver.outputs.v }}"
       - name: Unsigniertes Programm bereitstellen
         id: unsigned
         uses: actions/upload-artifact@v4
         with:
           name: StickTresor-unsigniert
-          path: StickTresor.exe
+          path: dist/StickTresor.exe
       # Signieren mit SignPath (kostenlos für Open Source, Zertifikat der SignPath Foundation).
       # Läuft nur bei einem veröffentlichten Release und sobald die Repository-Variable
       # SIGNPATH_ORGANIZATION_ID und das Secret SIGNPATH_API_TOKEN eingerichtet sind.
@@ -72,18 +66,24 @@ jobs:
       - name: Signierte Exe übernehmen
         if: steps.sign.outcome == 'success'
         run: |
-          cp signed/StickTresor.exe StickTresor.exe
-          sha256sum StickTresor.exe > StickTresor.exe.sha256
+          cp signed/StickTresor.exe dist/StickTresor.exe
+          (cd dist && sha256sum StickTresor.exe > StickTresor.exe.sha256)
       - uses: actions/upload-artifact@v4
         with:
           name: StickTresor
           path: |
-            StickTresor.exe
-            StickTresor.exe.sha256
+            dist/StickTresor.exe
+            dist/StickTresor-*
+            dist/*.sha256
       - name: Release
         if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            StickTresor.exe
-            StickTresor.exe.sha256
+            dist/StickTresor.exe
+            dist/StickTresor-linux-amd64
+            dist/StickTresor-linux-arm64
+            dist/StickTresor-macos-arm64
+            dist/StickTresor-macos-amd64
+            dist/StickTresor-macos.zip
+            dist/*.sha256

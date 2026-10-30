@@ -21,6 +21,9 @@ const createNoWindow = 0x08000000
 
 // Collect liest diesen PC aus.
 func Collect() (Result, error) {
+	if UseFake {
+		return fakeCollect()
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 

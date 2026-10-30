@@ -183,3 +183,26 @@ func TestMoveToDataFolder(t *testing.T) {
 		t.Fatal("Backup nicht verschoben")
 	}
 }
+
+// «Auf USB-Stick kopieren» nimmt alle Programmversionen mit (Windows, Mac, Linux).
+func TestPrepareAllPlatforms(t *testing.T) {
+	dir, stick := t.TempDir(), t.TempDir()
+	os.WriteFile(filepath.Join(dir, "StickTresor.exe"), []byte("win"), 0o644)
+	os.MkdirAll(filepath.Join(dir, "StickTresor.app", "Contents", "MacOS"), 0o755)
+	os.WriteFile(filepath.Join(dir, "StickTresor.app", "Contents", "MacOS", "StickTresor"), []byte("#!/bin/sh"), 0o755)
+	os.WriteFile(filepath.Join(dir, "StickTresor-linux-amd64"), []byte("elf"), 0o755)
+	a := New(dir, nil)
+	r, err := a.prepareTo(stick)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{"StickTresor.exe", "StickTresor.app/Contents/MacOS/StickTresor", "StickTresor-linux-amd64"} {
+		st, err := os.Stat(filepath.Join(stick, p))
+		if err != nil {
+			t.Fatalf("%s fehlt (%s)", p, r.Exe)
+		}
+		if p != "StickTresor.exe" && st.Mode().Perm()&0o100 == 0 {
+			t.Fatalf("%s nicht ausführbar: %v", p, st.Mode())
+		}
+	}
+}

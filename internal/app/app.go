@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -22,7 +23,7 @@ import (
 )
 
 // Version wird beim Bauen aus dem Git-Tag gesetzt (-ldflags "-X .../internal/app.Version=4.1.0").
-var Version = "4.1.1"
+var Version = "4.2.0"
 
 // handoverFile merkt sich ohne Passwort, in welchem Übergabe-Schritt der Stick ist:
 //
@@ -85,6 +86,7 @@ type Status struct {
 	Partner     *partner.Partner `json:"partner"`
 	AppTitle    string           `json:"appTitle"`
 	CanPartner  bool             `json:"canPartner"` // Partner-Angaben dürfen bearbeitet werden
+	Platform    string           `json:"platform"`   // windows, darwin, linux
 }
 
 // Status sagt der Oberfläche, welcher Bildschirm zu zeigen ist.
@@ -92,7 +94,7 @@ type Status struct {
 func (a *App) Status() (s Status, err error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	s = Status{Dir: a.dir, File: filepath.Join(a.dir, vault.FileName), Version: Version,
+	s = Status{Platform: runtime.GOOS, Dir: a.dir, File: filepath.Join(a.dir, vault.FileName), Version: Version,
 		HasRecovery: vault.RecoveryExists(a.dir), Writable: writable(a.dir)}
 	s.Exists = vault.Exists(a.dir)
 	defer func() {

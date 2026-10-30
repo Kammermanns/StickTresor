@@ -1,4 +1,6 @@
-// Package capture liest die Daten eines Windows-PCs aus (WMI/CIM über PowerShell).
+// Package capture liest die Daten eines PCs aus: Windows über PowerShell/CIM,
+// macOS über system_profiler, Linux über /sys, /proc und Systemprogramme.
+// Was sich nicht auslesen lässt, bleibt leer und wird von Hand ergänzt.
 package capture
 
 import "github.com/Kammermanns/StickTresor/internal/vault"

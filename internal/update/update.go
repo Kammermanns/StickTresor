@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -29,10 +30,25 @@ import (
 // Repo ist das GitHub-Projekt, aus dem Updates geladen werden.
 const Repo = "Kammermanns/StickTresor"
 
-const (
-	AssetName = "StickTresor.exe"
-	maxSize   = 60 << 20
-)
+const maxSize = 60 << 20
+
+// AssetName ist die Datei im Release, die zu diesem System passt.
+var AssetName = AssetFor(runtime.GOOS, runtime.GOARCH)
+
+// AssetFor liefert den Namen der Programmdatei im Release je System.
+//
+//	Windows: StickTresor.exe · macOS: StickTresor-macos-arm64/-amd64 (Inhalt von StickTresor.app)
+//	Linux: StickTresor-linux-amd64/-arm64
+func AssetFor(goos, goarch string) string {
+	switch goos {
+	case "windows":
+		return "StickTresor.exe"
+	case "darwin":
+		return "StickTresor-macos-" + goarch
+	default:
+		return "StickTresor-" + goos + "-" + goarch
+	}
+}
 
 // API kann in Tests ersetzt werden.
 var API = "https://api.github.com"

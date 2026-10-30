@@ -4,7 +4,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 
 ## Was signiert wird
 
-- Nur `StickTresor.exe`, gebaut von GitHub Actions aus dem Quellcode dieses Repositories (Workflow `.github/workflows/build.yml`).
+- Nur `StickTresor.exe` (Windows), gebaut von GitHub Actions aus dem Quellcode dieses Repositories (Workflow `.github/workflows/build.yml`).
 - Keine Dateien von Dritten. Alle verwendeten Bibliotheken liegen als Quellcode im Repository (`third_party/`, `vendor/`).
 - Jede Signatur wird einzeln von Hand freigegeben.
 
@@ -15,6 +15,8 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 3. Der Workflow sendet eine Signier-Anfrage an SignPath (`.github/workflows/build.yml`, Artefaktkonfiguration `.signpath/artifact-configuration.xml`).
 4. Der Approver gibt die Anfrage in SignPath von Hand frei.
 5. Die signierte Exe und ihre SHA-256-Prüfsumme werden an das Release angehängt.
+
+Die Programme für macOS und Linux werden nicht über SignPath signiert. Ihre Echtheit prüft die Update-Funktion über die SHA-256-Prüfsumme aus dem Release.
 
 ## Rollen
 

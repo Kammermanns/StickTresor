@@ -457,6 +457,17 @@ async function run(msg, fn) {
   try { return await fn(); } finally { busy(false); }
 }
 
+// Kopieren: über das System (mit automatischem Leeren), sonst über den Browser
+async function copyText(v) {
+  try { await api.copy(v); }
+  catch (e) {
+    if (errText(e) !== "NOCLIP" || !navigator.clipboard) throw e;
+    await navigator.clipboard.writeText(v);
+    setTimeout(() => { navigator.clipboard.writeText("").catch(() => {}); }, 30000);
+  }
+}
+const isWin = () => !S.status || !S.status.platform || S.status.platform === "windows";
+
 // ---------- Ablauf ----------
 async function refresh() {
   try {
@@ -1179,9 +1190,9 @@ function bindGrid() {
     const tr = b.closest("tr"), pw = tr.querySelector('[data-k="password"]');
     try {
       switch (b.dataset.gact) {
-        case "copy": if (pw.value) { await api.copy(pw.value); toast("Passwort kopiert. Die Zwischenablage wird in 30 Sekunden geleert."); } return;
-        case "copyuser": { const v = tr.querySelector('[data-k="userName"]').value; if (v) { await api.copy(v); toast("Benutzername kopiert."); } return; }
-        case "copyurl": { const v = tr.querySelector('[data-k="url"]').value; if (v) { await api.copy(v); toast("Link kopiert."); } return; }
+        case "copy": if (pw.value) { await copyText(pw.value); toast("Passwort kopiert. Die Zwischenablage wird in 30 Sekunden geleert."); } return;
+        case "copyuser": { const v = tr.querySelector('[data-k="userName"]').value; if (v) { await copyText(v); toast("Benutzername kopiert."); } return; }
+        case "copyurl": { const v = tr.querySelector('[data-k="url"]').value; if (v) { await copyText(v); toast("Link kopiert."); } return; }
         case "openurl": { const v = fullURL(tr.querySelector('[data-k="url"]').value); if (v) await api.openURL(v); return; }
         case "gen":
           if (pw.value && !await confirmDlg("Neues Passwort erzeugen?", "Das bisherige Passwort in dieser Zeile wird ersetzt.", "Ersetzen")) return;
@@ -1776,7 +1787,7 @@ function printNachlass() {
 function viewHelp() {
   const ho = S.data.mode === "uebergabe";
   const sec = (id, title, body, open) => `<details class="help" id="h-${id}" ${open ? "open" : ""}><summary>${title}</summary><div class="helpbody">${body}</div></details>`;
-  const toc = [["start", "Erste Schritte"], ["geraete", "Geräte"], ["pw", "Passwörter"], ["abos", "Abos"], ["import", "Importieren"], ["druck", "Drucken"], ["sicher", "Sicherheit"], ["backup", "Sicherung"], ["update", "Updates"], ["nachlass", "Nachlass"], ["keepass", "KeePass"]];
+  const toc = [["start", "Erste Schritte"], ["geraete", "Geräte"], ["pw", "Passwörter"], ["abos", "Abos"], ["import", "Importieren"], ["druck", "Drucken"], ["sicher", "Sicherheit"], ["backup", "Sicherung"], ["update", "Updates"], ["nachlass", "Nachlass"], ["systeme", "Mac & Linux"], ["keepass", "KeePass"]];
   if (hasSupport(P)) toc.push(["support", "Hilfe von " + P.firma]);
   if (ho) toc.unshift(["dm", "Übergabe"]);
   const who = P ? esc(P.firma) : "Ihr IT-Partner";
@@ -1859,7 +1870,7 @@ function viewHelp() {
       <li><b>Passwort vergessen?</b> Auf dem Anmeldebildschirm <b>«Passwort vergessen?»</b> wählen und den ausgedruckten <b>Wiederherstellungsschlüssel</b> eingeben. Danach legen Sie ein neues Master-Passwort fest.</li>
       <li>Den Wiederherstellungsschlüssel <b>nicht zusammen mit dem Stick</b> aufbewahren. Einen neuen erzeugen: Zahnrad → <b>«Neuen Wiederherstellungsschlüssel erzeugen»</b>.</li>
       <li><b>Automatische Sperre</b> nach einigen Minuten ohne Bedienung (einstellbar unter Zahnrad).</li>
-      <li><b>Kopierte Passwörter</b> werden nach 30 Sekunden aus der Zwischenablage gelöscht und nicht im Windows-Zwischenablageverlauf gespeichert.</li>
+      <li><b>Kopierte Passwörter</b> werden nach 30 Sekunden aus der Zwischenablage gelöscht${isWin() ? " und nicht im Windows-Zwischenablageverlauf gespeichert" : ""}.</li>
     </ul>
     <p class="note">Ohne Master-Passwort <b>und</b> ohne Wiederherstellungsschlüssel lassen sich die Daten nicht mehr öffnen${P ? ", auch nicht durch " + who : ""}.</p>`)}
   ${sec("backup", "Sicherung", `
@@ -1881,6 +1892,15 @@ function viewHelp() {
       <li>Zahnrad → <b>«Nach Updates suchen»</b>. Nur dann verbindet sich die App mit GitHub, sonst nie.</li>
       <li>Ist eine neue Version da, lädt <b>«Jetzt aktualisieren»</b> sie, prüft die Prüfsumme (und bei signierten Versionen die Signatur), ersetzt das Programm auf dem Stick und startet neu.</li>
       <li>Ihre Daten (<b>daten.kdbx</b>) und die Firmenangaben bleiben unverändert. Vorher wird automatisch eine Sicherung angelegt.</li>
+    </ul>`)}
+  ${sec("systeme", "Windows, Mac und Linux", `
+    <p>Auf einem Stick können alle drei Programmversionen liegen. Sie verwenden dieselben Daten im Ordner <b>Daten</b>.</p>
+    <ul>
+      <li><b>Windows:</b> <b>StickTresor.exe</b> starten. Die App öffnet sich in einem eigenen Fenster.</li>
+      <li><b>Mac:</b> <b>StickTresor.app</b> starten. Die App öffnet sich als Fenster im Browser (am besten mit Chrome oder Edge, sonst Safari). Beim ersten Start fragt macOS eventuell nach: Rechtsklick → «Öffnen».</li>
+      <li><b>Linux:</b> <b>StickTresor-linux-amd64</b> starten. Die App öffnet sich als Fenster im Browser. Lässt sich die Datei nicht starten, ist der Stick meist mit FAT32 formatiert: dann exFAT verwenden oder das Programm in den Benutzerordner kopieren.</li>
+      <li>Im Browser-Fenster beendet sich die App, wenn Sie das Fenster schliessen. Die Verbindung bleibt auf diesem Computer und ist mit einem Einmal-Schlüssel geschützt.</li>
+      <li><b>«Diesen PC erfassen»</b> liest auf Mac und Linux so viel aus wie möglich. Was fehlt (z.B. die Seriennummer unter Linux ohne Administratorrechte), tragen Sie von Hand ein.</li>
     </ul>`)}
   ${sec("keepass", "Offenes KeePass-Format", `
     <p>Ihre Daten liegen im Standardformat von KeePass. Sie können <b>daten.kdbx</b> jederzeit mit demselben Master-Passwort öffnen: mit <b>KeePass</b> oder <b>KeePassXC</b> am PC, <b>KeePassDX</b> (Android) oder <b>Strongbox</b> (iPhone). Kategorien sind dort Ordner, Geräte stehen als Tags und im Feld «Geräte».</p>
@@ -1912,7 +1932,7 @@ function viewSettings() {
         <select id="s-lock" class="field" style="width:170px;height:40px">
           ${[2, 5, 10, 15, 30].map(m => `<option value="${m}" ${m === lockMin ? "selected" : ""}>${m} Minuten</option>`).join("")}
         </select></div>
-      <div class="small muted">Kopierte Passwörter werden nach 30 Sekunden aus der Zwischenablage gelöscht und nicht im Windows-Zwischenablageverlauf gespeichert.</div>
+      <div class="small muted">Kopierte Passwörter werden nach 30 Sekunden aus der Zwischenablage gelöscht${isWin() ? " und nicht im Windows-Zwischenablageverlauf gespeichert" : ""}.</div>
     </section>
     <section class="box"><h2 style="font-size:15px">Offenes KeePass-Format</h2>
       <div style="color:#4A4450">Alle Daten liegen in <b>daten.kdbx</b> (KeePass-Format KDBX 4). Die Datei lässt sich jederzeit mit demselben Master-Passwort direkt öffnen: mit KeePass oder KeePassXC am PC, KeePassDX auf Android oder Strongbox auf dem iPhone. Ein Export ist nicht nötig.</div>
@@ -2293,8 +2313,8 @@ async function act(a, id, el) {
       case "cat-manage": return catManageDialog();
       case "entry-edit": return entryDialog(d.entries.find(e => e.id === id));
       case "pw-show": S.shown.has(id) ? S.shown.delete(id) : S.shown.add(id); return rerenderContent();
-      case "pw-copy": { const e = d.entries.find(e => e.id === id); await api.copy(e.password); return toast("Passwort kopiert. Die Zwischenablage wird in 30 Sekunden geleert."); }
-      case "user-copy": { const e = d.entries.find(e => e.id === id); await api.copy(e.userName); return toast("Benutzername kopiert."); }
+      case "pw-copy": { const e = d.entries.find(e => e.id === id); await copyText(e.password); return toast("Passwort kopiert. Die Zwischenablage wird in 30 Sekunden geleert."); }
+      case "user-copy": { const e = d.entries.find(e => e.id === id); await copyText(e.userName); return toast("Benutzername kopiert."); }
       case "cat-add": {
         const n = await promptDlg("Neue Kategorie", "Name", ""); if (!n) return;
         const r = await api.addCategory(n); S.data = r.data; S.view = "pw"; S.catId = r.id; S.q = ""; return render();
